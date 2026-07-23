@@ -1,9 +1,9 @@
 ---
 id: 001
 title: Add a health-check endpoint
-status: building
-branch: ""
-pr: ""
+status: ready_for_review
+branch: ticket/001-health-check-endpoint
+pr: "https://github.com/pixelhudson-sudo/opencode-2607/pull/1"
 ---
 ## Goal
 Expose a HTTP GET /health endpoint so infrastructure can ping the service.
@@ -26,4 +26,9 @@ Expose a HTTP GET /health endpoint so infrastructure can ping the service.
 ```bash
 curl -s http://localhost:3000/health
 # → {"status":"ok"}
+
+## Build log
+- Created `src/health.ts` — standalone Node.js HTTP server using built-in `http` module (zero new deps)
+- Verified: HTTP 200, `Content-Type: application/json`, response time 3.9ms
+- PR: https://github.com/pixelhudson-sudo/opencode-2607/pull/1
 ```
