@@ -1,7 +1,7 @@
 ---
 id: 001
 title: Add a health-check endpoint
-status: ready_for_review
+status: reviewed
 branch: ticket/001-health-check-endpoint
 pr: "https://github.com/pixelhudson-sudo/opencode-2607/pull/1"
 ---
