@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Veil of Distraction</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@font-face{font-family:'VT';src:local('Courier New'),local('monospace')}
+html,body{background:#0a0a0a;color:#b3f0b0;font-family:'Courier New',monospace;font-size:14px;line-height:1.5;min-height:100vh;overflow-x:hidden}
+::selection{background:#b3f0b0;color:#0a0a0a}
+.hidden{display:none!important}
+#title-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;max-width:640px;margin:0 auto}
+#title-art{color:#1a4a1a;font-size:10px;line-height:1.1;text-align:center;margin-bottom:1rem}
+h1{font-size:2rem;font-weight:400;letter-spacing:6px;text-transform:uppercase;color:#b3f0b0;margin-bottom:.5rem;text-align:center}
+.subtitle{color:#5a8a5a;font-style:italic;margin-bottom:2rem;text-align:center}
+#intro-text{color:#6a9a6a;margin-bottom:2rem;text-align:center;min-height:4em;font-size:13px}
+#intro-text .dim{color:#4a6a4a}
+#selection-area{text-align:center;width:100%}
+.sel-group{margin-bottom:1.5rem}
+.sel-label{color:#5a8a5a;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:block}
+.sel-buttons{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.sel-btn{background:transparent;border:1px solid #2a4a2a;color:#6a9a6a;padding:10px 20px;font-family:inherit;font-size:14px;cursor:pointer;transition:.2s;border-radius:0}
+.sel-btn:hover{border-color:#5a8a5a;color:#b3f0b0}
+.sel-btn.active{background:#1a3a1a;border-color:#b3f0b0;color:#b3f0b0}
+#begin-btn{background:transparent;border:2px solid #4a4a4a;color:#4a4a4a;padding:12px 48px;font-family:inherit;font-size:16px;letter-spacing:4px;text-transform:uppercase;cursor:pointer;margin-top:1rem;transition:.3s}
+#begin-btn.enabled{border-color:#b3f0b0;color:#b3f0b0}
+#begin-btn.enabled:hover{background:#1a3a1a}
+#game-screen{padding:1rem;max-width:640px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+#status-bar{display:flex;gap:12px;flex-wrap:wrap;border:1px solid #1a1a1a;padding:10px 14px;margin-bottom:1rem;font-size:12px;background:#0d0d0d}
+.stat{color:#5a8a5a}
+.stat span{color:#b3f0b0;font-weight:700}
+.stat.dim span{color:#4a4a4a}
+.stat.glow span{color:#66ff66;text-shadow:0 0 6px rgba(102,255,102,.4)}
+#game-main{flex:1;display:flex;flex-direction:column}
+#event-area{border:1px solid #1a1a1a;padding:1rem;margin-bottom:1rem;min-height:120px;background:#0d0d0d}
+#event-text{color:#b3f0b0;min-height:4em}
+#event-text .awaiting{color:#4a4a4a}
+#options-area{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+.opt-btn{background:transparent;border:1px solid #2a4a2a;color:#6a9a6a;padding:12px 16px;font-family:inherit;font-size:13px;text-align:left;cursor:pointer;transition:.2s}
+.opt-btn:hover:not(:disabled){border-color:#5a8a5a;color:#b3f0b0;background:#111}
+.opt-btn:disabled{opacity:.3;cursor:default}
+.opt-btn.chosen{border-color:#b3f0b0;background:#1a3a1a}
+.opt-btn.rejected{opacity:.2}
+#outcome-area{border:1px solid #2a2a1a;padding:1rem;margin-bottom:1rem;background:#0d0d0d}
+#outcome-text{color:#8a9a6a;margin-bottom:8px}
+#virtue-change{font-size:12px;margin-bottom:8px}
+#virtue-change.positive{color:#66cc66}
+#virtue-change.negative{color:#cc6666}
+#demon-note{border-left:2px solid #662222;padding:8px 12px;margin:8px 0;background:#1a0a0a;color:#cc6666;font-size:12px;font-style:italic}
+#demon-note .sig{color:#4a2222;font-style:normal;font-size:10px;margin-top:4px;display:block}
+#continue-btn{background:transparent;border:1px solid #2a4a2a;color:#b3f0b0;padding:8px 24px;font-family:inherit;font-size:13px;cursor:pointer;margin-top:8px;float:right;transition:.2s}
+#continue-btn:hover{border-color:#b3f0b0;background:#1a3a1a}
+#bottom-bar{border-top:1px solid #1a1a1a;padding:10px 0;display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:12px;margin-top:auto}
+#meditate-area{display:flex;align-items:center;gap:10px;flex:1}
+#meditate-btn{background:transparent;border:1px solid #3a3a2a;color:#6a8a6a;padding:6px 16px;font-family:inherit;font-size:12px;cursor:pointer;transition:.2s}
+#meditate-btn:hover:not(:disabled){border-color:#8a6a3a;color:#b3b070}
+#meditate-btn:disabled{opacity:.3;cursor:default}
+#meditate-bar{flex:1;height:16px;border:1px solid #3a3a2a;background:#111;position:relative;max-width:200px}
+#meditate-fill{height:100%;width:0%;background:#6a6a3a;transition:width .3s}
+#meditate-fill.complete{background:#8a8a4a;box-shadow:0 0 8px rgba(138,138,74,.3)}
+#meditate-status{color:#6a6a3a;font-size:11px;min-width:80px}
+#log-toggle{background:none;border:none;color:#3a3a3a;font-family:inherit;font-size:11px;cursor:pointer;letter-spacing:1px}
+#log-toggle:hover{color:#5a5a5a}
+#log-area{border:1px solid #1a1a1a;padding:8px;margin-top:8px;max-height:150px;overflow-y:auto;background:#0a0a0a;font-size:11px;color:#3a3a3a}
+.log-entry{margin-bottom:4px;padding:2px 4px}
+.log-entry .lday{color:#4a4a4a}
+.log-entry .lvirt{float:right}
+.log-entry .lvirt.pos{color:#3a5a3a}
+.log-entry .lvirt.neg{color:#5a3a3a}
+
+/* Windfall */
+#windfall-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,10,.92);display:flex;align-items:center;justify-content:center;z-index:100;cursor:pointer}
+#windfall-content{max-width:440px;padding:2rem;text-align:center}
+.crack-text{color:#6a3a3a;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:1rem}
+#windfall-insight{color:#b3f0b0;margin-bottom:1rem;font-style:italic;line-height:1.6}
+#windfall-reward{color:#8a8a4a;font-size:13px;margin-bottom:1rem}
+#windfall-counter{color:#4a3a3a;font-size:10px;letter-spacing:2px}
+
+/* End screen */
+#end-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;max-width:640px;margin:0 auto;text-align:center}
+#end-screen h2{font-size:1.5rem;letter-spacing:4px;margin-bottom:2rem}
+.end-title.awake{color:#66ff66;text-shadow:0 0 12px rgba(102,255,102,.3)}
+.end-title.lost{color:#666666}
+#end-summary{color:#6a9a6a;margin-bottom:1.5rem;line-height:1.8}
+#end-verdict{font-size:18px;margin-bottom:2rem;padding:1rem;border:1px solid #2a2a2a}
+#end-verdict.high{color:#66ff66;border-color:#2a4a2a}
+#end-verdict.mid{color:#b3b070;border-color:#3a3a2a}
+#end-verdict.low{color:#cc6666;border-color:#3a2a2a}
+#end-address{border-left:2px solid #3a3a3a;padding:1rem;margin-bottom:2rem;color:#5a7a5a;font-style:italic;text-align:left;line-height:1.8;font-size:12px}
+#end-address strong{color:#7a9a7a}
+#play-again-btn{background:transparent;border:2px solid #2a4a2a;color:#6a9a6a;padding:12px 40px;font-family:inherit;font-size:14px;letter-spacing:3px;cursor:pointer;transition:.3s}
+#play-again-btn:hover{border-color:#b3f0b0;color:#b3f0b0;background:#1a3a1a}
+.rest-day-notice{color:#8a6a3a;font-style:italic;padding:.5rem;border:1px dashed #3a3a2a;margin-bottom:1rem}
+
+/* Truth panel */
+#truth-panel{display:none;position:fixed;bottom:1rem;right:1rem;z-index:50}
+#truth-panel.visible{display:block}
+#truth-btn{background:transparent;border:1px solid #3a2222;color:#6a3a3a;padding:6px 12px;font-family:inherit;font-size:10px;letter-spacing:2px;cursor:pointer;transition:.3s}
+#truth-btn:hover{border-color:#cc6666;color:#cc6666;background:#1a0a0a}
+#truth-reveal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,10,.95);display:flex;align-items:center;justify-content:center;z-index:200;cursor:pointer}
+#truth-reveal-content{max-width:480px;padding:2rem;text-align:left;color:#cc6666;line-height:2;font-size:13px}
+#truth-reveal-content .heading{color:#882222;text-align:center;letter-spacing:4px;text-transform:uppercase;margin-bottom:1rem;font-size:11px}
+#truth-reveal-content .body{color:#aa5555}
+#truth-reveal-content .closing{color:#662222;text-align:center;margin-top:1.5rem;font-style:italic}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:#0a0a0a}
+::-webkit-scrollbar-thumb{background:#1a1a1a}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pulse{animation:pulse 1.5s ease-in-out infinite}
+@keyframes glitch{0%{opacity:1;transform:translate(0)}20%{opacity:.8;transform:translate(-1px,1px)}40%{opacity:.9;transform:translate(1px,-1px)}60%{opacity:.7;transform:translate(-1px)}80%{opacity:1;transform:translate(0)}100%{opacity:1;transform:translate(0)}}
+.glitch{animation:glitch .3s ease-in-out 3}
+</style>
+</head>
+<body>
+
+<div id="title-screen">
+  <pre id="title-art">  __   __  _______  __   __  ___      ___   _______    _    _   _______  _______
+|  | |  ||   _   ||  | |  ||   |    |   | |       |  | |  | | |       ||       |
+|  |_|  ||  |_|  ||  |_|  ||   |    |   | |   _   |  |   |   ||   _   ||_     _|
+|       ||       ||       ||   |    |   | |  | |  |  |       ||  | |  |  |   |
+|_     _||       ||       ||   |___ |   | |  |_|  |  |  _    ||  |_|  |  |   |
+  |   |  |   _   || ||_|| ||       ||   | |       |  | | |   ||       |  |   |
+  |___|  |__| |__||_|   |_||_______||___| |_______|  |_|  |__||_______|  |___|</pre>
+  <h1>THE VEIL OF DISTRACTION</h1>
+  <p class="subtitle">A game about the things you never notice.</p>
+  <div id="intro-text"></div>
+  <div id="selection-area">
+    <div class="sel-group">
+      <span class="sel-label">Choose an age</span>
+      <div class="sel-buttons" id="age-select">
+        <button class="sel-btn" data-value="14">14</button>
+        <button class="sel-btn" data-value="18">18</button>
+        <button class="sel-btn" data-value="26">26</button>
+        <button class="sel-btn" data-value="33">33</button>
+      </div>
+    </div>
+    <div class="sel-group">
+      <span class="sel-label">Choose a gender</span>
+      <div class="sel-buttons" id="gender-select">
+        <button class="sel-btn" data-value="male">Male</button>
+        <button class="sel-btn" data-value="female">Female</button>
+      </div>
+    </div>
+    <button id="begin-btn" disabled>Begin</button>
+  </div>
+</div>
+
+<div id="game-screen" class="hidden">
+  <div id="status-bar">
+    <span class="stat">Day <span id="day-display">1</span>/10</span>
+    <span class="stat">Virtue <span id="virtue-display">0</span></span>
+    <span class="stat" id="energy-stat">Energy <span id="energy-display">10</span>/10</span>
+    <span class="stat">Awareness <span id="awareness-display">0</span></span>
+    <span class="stat">Truth <span id="truth-display">0</span>/10</span>
+  </div>
+  <div id="game-main">
+    <div id="event-area">
+      <div id="event-text"><span class="awaiting">Awaiting the day's trial...</span></div>
+    </div>
+    <div id="options-area"></div>
+    <div id="outcome-area" class="hidden">
+      <div id="outcome-text"></div>
+      <div id="virtue-change"></div>
+      <div id="demon-note" class="hidden"></div>
+      <div style="clear:both"></div>
+      <button id="continue-btn">Continue →</button>
+    </div>
+    <div id="rest-day" class="rest-day-notice hidden"></div>
+  </div>
+  <div id="bottom-bar">
+    <div id="meditate-area">
+      <button id="meditate-btn">[ Meditate ]</button>
+      <div id="meditate-bar" class="hidden">
+        <div id="meditate-fill"></div>
+      </div>
+      <span id="meditate-status"></span>
+    </div>
+    <button id="log-toggle">[ Log ]</button>
+    <div id="truth-panel">
+      <button id="truth-btn">???</button>
+    </div>
+  </div>
+  <div id="log-area" class="hidden"></div>
+</div>
+
+<div id="windfall-overlay" class="hidden">
+  <div id="windfall-content">
+    <div class="crack-text">A crack in the veil...</div>
+    <div id="windfall-insight"></div>
+    <div id="windfall-reward"></div>
+    <div id="windfall-counter"></div>
+  </div>
+</div>
+
+<div id="truth-reveal" class="hidden">
+  <div id="truth-reveal-content"></div>
+</div>
+
+<div id="end-screen" class="hidden">
+  <h2 id="end-title"></h2>
+  <div id="end-summary"></div>
+  <div id="end-verdict"></div>
+  <div id="end-address"></div>
+  <button id="play-again-btn">Play Again</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// SCENARIO DATA — 4 ages × 2 genders × 10 days
+// ══════════════════════════════════════════════════════════
+
+const S = {};
+
+S["14_male"] = { age:14, gender:"Male", days:[
+{event:'Your mother stands at your door, arms crossed. "I asked you three times already to clean your room." Her voice has that tired edge — the one that means she has been holding it in all day.', note:'This fight has occurred 47 times this year. The demon Resentment feeds on the loop: anger, silence, guilt, repeat. The room is never the point. The pattern is always the point.', opts:[
+{txt:"Nod and start cleaning without a word",v:3,en:-1,aw:1},
+{txt:"Scream 'I\'ll do it later!' and slam the door",v:-2,en:2,aw:0},
+{txt:"Mumble an excuse and keep gaming",v:-1,en:1,aw:0}]},
+
+{event:'At lunch, your friend leans in. "We\'re gonna skip fourth period. Mr. Henderson\'s sub. You in?" Three other kids are watching, waiting for your answer.', note:'The demon Belonging whispers: "They will accept you if you break the rules with them." It was the same voice that made the first human eat the fruit. The fruit is always an apple of rejection.', opts:[
+{txt:"Say no and walk to class",v:3,en:-1,aw:1},
+{txt:"Join them, heart racing",v:-1,en:2,aw:0},
+{txt:"Tell the teacher you're worried about them",v:2,en:-2,aw:2}]},
+
+{event:'A kid in your year is backed against the lockers. Two others are laughing, pushing him. His glasses are crooked, and he is not laughing. You are ten feet away.', note:'Witness is the first virtue the demons try to kill. The demon Apathy whispers: "Not your fight. Someone else will step in." Someone never does.', opts:[
+{txt:"Step in and tell them to stop",v:4,en:-2,aw:2},
+{txt:"Walk past and pretend you didn't see",v:-2,en:1,aw:0},
+{txt:"Get a teacher",v:3,en:-1,aw:1}]},
+
+{event:'Your father knocks, then opens the door without waiting. "Your grades came in. We need to talk." He holds a printout with red marks. His disappointment fills the room more than his body should.', note:'The demon Shame builds its nest in a father\'s eyes. Decades later, you will hear that tone in your own voice. The pattern reproduces itself.', opts:[
+{txt:"Tell him you'll work harder and mean it",v:2,en:-1,aw:1},
+{txt:"Blame the teacher who 'sucks at explaining'",v:-2,en:1,aw:0},
+{txt:"Ask him to help you study",v:4,en:-2,aw:1}]},
+
+{event:'Two friends are fighting. One pulls you aside. "It\'s me or her. Choose." You had no idea this was coming. Your stomach drops.', note:'Division is the demon\'s finest tool. A house divided cannot stand, but a child divided is easy to lead. The ultimatum is never really about the other person.', opts:[
+{txt:"Refuse to choose and try to mediate",v:3,en:-2,aw:2},
+{txt:"Pick the friend you've known longer",v:-1,en:1,aw:0},
+{txt:"Walk away from both of them",v:0,en:1,aw:0}]},
+
+{event:'Your younger sibling knocks timidly. "Can I borrow your jacket for the school trip? I\'ll be really careful. I promise." It is your favorite jacket.', note:'The demon Possession teaches: "Yours. You earned it. They will ruin it." The lesson is a lie. Things pass through us. Only the grip leaves calluses.', opts:[
+{txt:"Hand it over with a smile",v:3,en:-1,aw:1},
+{txt:"Say no, it's too expensive",v:-1,en:1,aw:0},
+{txt:"Lend it but warn them not to damage it",v:1,en:0,aw:1}]},
+
+{event:'The teacher calls you to the front. "Someone said you were looking at answers during the test. Is that true?" Your face burns. You did not cheat, but the accusation sits in the room like smoke.', note:'The demon Injustice is bait. It wants you to rage, to scream, to alienate the one person who might believe you. Calm is the antidote. Calm starves it.', opts:[
+{txt:"Stay calm and explain what happened",v:3,en:-1,aw:1},
+{txt:"Shout that you're being framed and storm out",v:-2,en:2,aw:0},
+{txt:"Go silent and take the punishment",v:0,en:-1,aw:1}]},
+
+{event:'Your grandmother is visiting. She wants you to sit with her, look at old photos, eat the cookies she baked. But your friends are online, waiting for you in the game.', note:'The demon Urgency convinces you that time spent with the slow is wasted. It is the same demon that will keep you from your deathbed. The cookies will not wait forever.', opts:[
+{txt:"Spend the evening with her",v:4,en:-1,aw:2},
+{txt:"Say hi briefly then go game with friends",v:-1,en:2,aw:0},
+{txt:"Watch photos while texting friends",v:0,en:0,aw:0}]},
+
+{event:'The test is in front of you. You studied, but there are three questions you cannot answer. Your friend two seats over has their paper angled. You could see if you tried.', note:'The demon Shortcut promises one small sin that no one will know. But you will know. The soul keeps a ledger that no one else reads. You will read it one day.', opts:[
+{txt:"Do your best and accept the grade",v:3,en:-2,aw:1},
+{txt:"Look at their paper",v:-3,en:1,aw:0},
+{txt:"Write what you know and leave the rest blank",v:2,en:-1,aw:1}]},
+
+{event:'A message pops up in your game chat from a stranger. "Hey, you seem cool. What\'s your real name? Where do you live?" The profile has no picture.', note:'The demon Lure sets the hook with kindness. Every predator knows that the gentlest voice catches the most souls. This is not the first time you have been hunted.', opts:[
+{txt:"Block and report them immediately",v:3,en:0,aw:2},
+{txt:"Reply with fake info out of curiosity",v:-2,en:1,aw:0},
+{txt:"Tell your parent about it",v:4,en:-1,aw:2}]}
+]};
+
+S["14_female"] = { age:14, gender:"Female", days:[
+{event:'At lunch, your friend group is whispering. Maya is crying in the bathroom because someone shared her secret. "She\'s so dramatic," one friend says. "You agree, right?"', note:'The demon Gossip disguises cruelty as bonding. Every time you laugh at someone else\'s pain, you pay the toll with a piece of your own compassion.', opts:[
+{txt:"Go check on Maya in the bathroom",v:4,en:-2,aw:2},
+{txt:"Nod and change the subject",v:0,en:1,aw:0},
+{txt:"Agree and add something to the gossip",v:-2,en:2,aw:0}]},
+
+{event:'Your mom looks at you across the dinner table. "Have you been eating? You look thinner. Are you sure you\'re okay?" Her concern feels like a spotlight on everything you hate about yourself.', note:'The demon Vanity plants a mirror in your mind and makes you stare. The body is a vessel, not an identity. But They have convinced the whole world otherwise.', opts:[
+{txt:"Tell her honestly how you feel about your body",v:3,en:-2,aw:1},
+{txt:"Snap 'Stop commenting on my body' and leave the table",v:-2,en:2,aw:0},
+{txt:"Say 'I\'m fine' and change the subject",v:0,en:0,aw:0}]},
+
+{event:'You open Instagram. A girl from school posted a photo in a bikini. Fifty-seven likes. Your own post from yesterday has twelve. A hollow feeling opens in your chest. You start comparing.', note:'The demon Comparison is the most efficient trap ever designed. It turns every other human into a weapon against yourself. The likes are not real. The wound is.', opts:[
+{txt:"Close the app and do something creative",v:3,en:-1,aw:1},
+{txt:"Scroll more, feeling worse",v:-2,en:1,aw:0},
+{txt:"Post something trying to compete",v:-1,en:2,aw:0}]},
+
+{event:'A senior boy you barely know slides into your DMs. "You\'re really pretty. Send me a pic?" Your heart pounds. Part of you is flattered. Part of you is afraid.', note:'The demon Flattery is the oldest hook. Millions of years of evolution, and the species still cannot resist someone saying "You are special." The demand is never where it stops.', opts:[
+{txt:"Say no and tell a trusted adult",v:4,en:-1,aw:2},
+{txt:"Send a harmless selfie",v:-1,en:2,aw:0},
+{txt:"Politely decline and block",v:3,en:0,aw:1}]},
+
+{event:'A rumor is spreading. Someone says you said something cruel about your best friend — something you never said. Your best friend is ignoring your texts. The group chat is silent.', note:'The demon Division does not need truth. It needs a crack. One unanswered text grows into a canyon. The real enemy is silence between friends.', opts:[
+{txt:"Go find your friend and talk face to face",v:4,en:-2,aw:2},
+{txt:"Post a vague story defending yourself",v:-1,en:1,aw:0},
+{txt:"Ignore it and hope it blows over",v:-1,en:0,aw:0}]},
+
+{event:'Your dad walks into your room. He sees your red eyes. "What\'s wrong?" You try to say "nothing" but your voice cracks. He stands there, not knowing what to do, hands in his pockets.', note:'The demon Silence tells you: "He will not understand. No one will. Keep it inside." The voice sounds like protection. It is a prison cell locking from the inside.', opts:[
+{txt:"Tell him everything through the tears",v:4,en:-1,aw:2},
+{txt:"Say 'I don't want to talk about it' and shut down",v:-1,en:1,aw:0},
+{txt:"Ask him to just sit with you",v:2,en:0,aw:1}]},
+
+{event:'Your best friend shows up at your door, eyes puffy. "I can\'t go home tonight. My parents are screaming at each other again." She is shaking. You can hear her breath catching.', note:'The demon Despair wants you to carry someone else\'s pain alone. Friendship is not a burden — but They would have you believe it is. The demon feeds on isolation.', opts:[
+{txt:"Bring her inside and listen all night",v:5,en:-2,aw:2},
+{txt:"Say 'That sucks' but hint you're busy",v:-1,en:1,aw:0},
+{txt:"Text your own parent for advice on how to help",v:3,en:-1,aw:1}]},
+
+{event:'A girl in your class is having a party on Friday. Her parents are away. "Everyone\'s going," she says. "There will be alcohol. Don\'t be boring." You know your parents would say no.', note:'The demon Peer Pressure wears a friendly face. "Boring" is the accusation, and the threat of exclusion is the lever. The lever has worked since the first tribe cast out the first person.', opts:[
+{txt:"Politely decline and mean it",v:3,en:-1,aw:1},
+{txt:"Go but don't drink",v:0,en:2,aw:0},
+{txt:"Lie to your parents and go",v:-2,en:3,aw:0}]},
+
+{event:'The teacher hands back your essay with an A and writes "Best in class" on it. The group of girls at the next table sees it. One whispers loudly: "Teacher\'s pet. Probably cheated. Not a surprise, honestly."', note:'The demon Envy cannot stand another\'s light, so it tries to dim it. The whisper is not about you. It is about the gap between what they are and what they know they could be.', opts:[
+{txt:"Thank the teacher and ignore the whispers",v:2,en:-1,aw:1},
+{txt:"Fire back with an insult",v:-2,en:2,aw:0},
+{txt:"Tell the teacher what they said",v:1,en:0,aw:0}]},
+
+{event:'A boy you barely know passes you a note in class: "Will you go out with me?" His friends are watching. A few girls notice and whisper. The paper feels hot in your hand.', note:'The demon Performance turns every human interaction into a stage. They want you to act for the audience instead of following your own heart. The audience never pays the price for your choices.', opts:[
+{txt:"Write back honestly — yes, no, or 'let's talk later'",v:2,en:0,aw:1},
+{txt:"Say yes because everyone is watching",v:-1,en:2,aw:0},
+{txt:"Laugh it off to seem cool",v:-1,en:1,aw:0}]}
+]};
+
+S["18_male"] = { age:18, gender:"Male", days:[
+{event:'Your mother is packing your bags. She folds your shirts the way she always has — military corners. She is quiet. Your father stands in the doorway, arms crossed, jaw tight. Tomorrow, you leave for college.', note:'The demon Nostalgia weaponizes love. It will whisper: "They are getting older. You are abandoning them." The truth is that leaving is the first act of becoming someone worth returning to.', opts:[
+{txt:"Thank them both and help with the packing",v:3,en:-1,aw:1},
+{txt:"Slam the door and play video games to avoid the feeling",v:-2,en:2,aw:0},
+{txt:"Sit with your mom and talk about how she feels",v:4,en:-2,aw:2}]},
+
+{event:'Frat guys invite you to a party. "We don\'t take just anyone, bro. You seem chill. Come drink with us tonight. It\'s how pledges earn their spot." The beer is free. The pressure is not.', note:'The demon Belonging never asks for your soul upfront. It asks for a drink, a secret, a small betrayal. By the time you realize the cost, you have already paid.', opts:[
+{txt:"Decline respectfully and walk away",v:3,en:-1,aw:2},
+{txt:"Go and drink to fit in",v:-1,en:3,aw:0},
+{txt:"Go but stay sober and observe",v:1,en:1,aw:1}]},
+
+{event:'Your roommate pulls out a bag of white powder at a party. "Just coke. Everyone does it here. One line. You won\'t even need to pay." The room is watching. Music is loud.', note:'The demon Escape promises a shortcut out of yourself. It always charges interest. The first taste is free. The rest costs everything.', opts:[
+{txt:"Say no firmly and leave the party",v:4,en:-2,aw:2},
+{txt:"Try it because everyone else is",v:-4,en:3,aw:0},
+{txt:"Tell your roommate privately that you're worried about him",v:3,en:-1,aw:1}]},
+
+{event:'Your girlfriend whispers in the dark: "I want to. Don\'t you?" Her hand is on your chest. You are not sure you are ready, but your body is saying something else entirely.', note:'The demon Lust hurries what should not be hurried. It is not that the act is wrong — it is that the timing is being stolen from you. They rush you so you cannot feel the weight of your own choices.', opts:[
+{txt:"Tell her you're not ready and talk about it",v:3,en:-2,aw:2},
+{txt:"Go ahead despite your hesitation",v:-1,en:3,aw:0},
+{txt:"Say you want to wait until you both feel sure",v:2,en:-1,aw:1}]},
+
+{event:'Your student loan statements arrived. The number is bigger than your parents\' annual salary. Your phone buzzes with a credit card offer: "Approved! 0% APR for 12 months."', note:'The demon Debt chains the future to the present. They make it easy because they want you bound. Every "buy now, pay later" is a collar they hope you will forget is there.', opts:[
+{txt:"Create a strict budget and stick to it",v:4,en:-1,aw:2},
+{txt:"Take the credit card offer and worry later",v:-2,en:3,aw:0},
+{txt:"Apply for scholarships and a part-time job",v:3,en:-2,aw:1}]},
+
+{event:'The final exam is in one hour. You studied for three days. A friend texts: "I have a photo of the answer key. Got it from last year\'s test. Want it?"', note:'The demon Expediency offers the same deal it offered every student before you: "One shortcut. No one gets hurt. Just this once." But the soul does not count in "just this once."', opts:[
+{txt:"Refuse and rely on your own work",v:4,en:-2,aw:2},
+{txt:"Take the photo and use it",v:-4,en:2,aw:0},
+{txt:"Tell your friend you won't, and urge them not to either",v:3,en:-1,aw:1}]},
+
+{event:'Your roommate has not done dishes in three weeks. The sink is a science experiment. You ask him. He shrugs. "Dude, chill. I\'ll get to it." You want to flip the entire bin onto his bed.', note:'The demon Rage is patient. It waits until the small provocations pile into a mountain. Then it hands you the match. The explosion feels good for exactly three seconds.', opts:[
+{txt:"Talk to him calmly about a cleaning schedule",v:3,en:-1,aw:1},
+{txt:"Yell and create a scene",v:-2,en:2,aw:0},
+{txt:"Just clean it yourself to keep the peace",v:0,en:-2,aw:0}]},
+
+{event:'Your part-time job manager calls. Someone called in sick. "Can you cover the night shift?" You have a massive exam tomorrow. But you need the money. You can feel the trap closing.', note:'The demon Grind convinces you that rest is weakness. It fills your calendar so full you cannot hear your own thoughts. A busy mind is a controlled mind. They want you busy.', opts:[
+{txt:"Politely decline and protect your study time",v:3,en:-1,aw:2},
+{txt:"Take the shift and study after midnight",v:-1,en:-1,aw:0},
+{txt:"Quit the job if it keeps conflicting with your growth",v:2,en:1,aw:1}]},
+
+{event:'You promised yourself you would study tonight. Instead, you have been scrolling for two hours. The screen light hits your face in the dark. 1:47 AM. Your exam is at 8.', note:'The demon Consumption built the most efficient trap in human history. It fits in your pocket. It knows exactly what you love, what you fear, and what you cannot resist watching.', opts:[
+{txt:"Put the phone in another room and sleep",v:2,en:-1,aw:1},
+{txt:"Keep scrolling — you'll cram in the morning",v:-2,en:1,aw:0},
+{txt:"Write down what you're avoiding and examine it",v:4,en:-2,aw:3}]},
+
+{event:'Your philosophy professor says after class: "You have interesting ideas. You should consider majoring in this. You could do real work." It is the first time an adult has seen potential in you.', note:'The demon Doubt whispers: "He says that to everyone. You are not special. You will fail." The demon is afraid of your becoming. That is why it speaks loudest at the threshold of transformation.', opts:[
+{txt:"Take his words seriously and explore the path",v:4,en:-1,aw:2},
+{txt:"Dismiss it as politeness and stay in your lane",v:-1,en:1,aw:0},
+{txt:"Ask him for a reading list to start",v:3,en:-1,aw:1}]}
+]};
+
+S["18_female"] = { age:18, gender:"Female", days:[
+{event:'Your mother puts a university brochure on the kitchen table. "You\'re smart enough to be a doctor. Don\'t waste that on art school." She says it like the matter is settled. Like your dreams are a detour from the real path.', note:'The demon Expectation uses the voice of love to prescribe your life. It will say "I want what is best for you" while building a cage of approval.', opts:[
+{txt:"Share your real dreams and ask her to listen first",v:3,en:-2,aw:2},
+{txt:"Shout 'It\'s my life' and storm out",v:-2,en:2,aw:0},
+{txt:"Go silent and comply, hiding your own desires",v:-1,en:-1,aw:0}]},
+
+{event:'Your friend has dark circles under her eyes. She laughs too loud at things that are not funny. She shows you her arm and quickly pulls the sleeve back down. "It\'s nothing. I just scratched myself."', note:'The demon Secrecy convinces the suffering that they are alone. It builds a wall around their pain and charges admission: their own voice. Your noticing is the first stone removed from the wall.', opts:[
+{txt:"Gently ask if she wants to talk to someone professional",v:5,en:-3,aw:3},
+{txt:"Pretend you didn't see and change the subject",v:-2,en:1,aw:0},
+{txt:"Tell your school counselor privately",v:3,en:-1,aw:1}]},
+
+{event:'Your boyfriend checks your phone. "Who is this guy texting you?" His voice is calm, but his hand is tight on the phone. You have never given him a reason to doubt you.', note:'The demon Control disguises jealousy as love. It is a vine that squeezes until you cannot breathe. The first time you apologize for something you did not do, the vine tightens.', opts:[
+{txt:"Tell him the trust issues are his to fix, not yours",v:4,en:-2,aw:2},
+{txt:"Apologize and try to prove your loyalty",v:-2,en:1,aw:0},
+{txt:"End the relationship",v:3,en:0,aw:1}]},
+
+{event:'You skip lunch. Again. The mirror showed you a body you do not want. A friend offers you half her sandwich. "No thanks, I\'m not hungry." The hunger is there. The hunger for control is louder.', note:'The demon Control of the body is the cruelest trick, because it makes self-harm feel like self-care. The ritual of denial whispers: "You are finally in charge." It is lying.', opts:[
+{txt:"Eat the sandwich and talk to a counselor about body image",v:5,en:-1,aw:3},
+{txt:"Stick to your restriction — it feels safer",v:-3,en:1,aw:0},
+{txt:"Call a friend and talk about something else until the urge passes",v:2,en:0,aw:1}]},
+
+{event:'The scholarship committee shortlisted you. Full tuition. But the acceptance party is the same weekend as your best friend\'s birthday trip. "You\'re not gonna pick some boring ceremony over me, right?"', note:'The demon Guilt uses the people you love as hostages. Every choice is framed as a betrayal. But the people who truly love you celebrate your ascension — they do not block it.', opts:[
+{txt:"Go to the ceremony and explain honestly to your friend",v:4,en:-1,aw:2},
+{txt:"Skip the ceremony to keep the peace",v:-1,en:2,aw:0},
+{txt:"Find a way to do both, even if it is exhausting",v:1,en:-2,aw:0}]},
+
+{event:'At the club, your friend disappears with a guy she just met. Her drink is still half-full on the bar. You text her. No answer. "She\'s fine," another friend says. "Don\'t be a mom."', note:'The demon Peer Pressure wants you to value coolness over safety. The fear of being called "parent" has left countless people in danger. Better a living killjoy than a dead cool girl.', opts:[
+{txt:"Find her and make sure she gets home safe",v:5,en:-2,aw:2},
+{txt:"Stay and enjoy the night, she's an adult",v:-2,en:2,aw:0},
+{txt:"Tell the bouncer you're worried about her",v:3,en:-1,aw:1}]},
+
+{event:'The professor in your seminar says, "Interesting perspective. But perhaps you haven\'t read enough to comment on this topic yet." The male student before you was told: "Great question." The class is quiet.', note:'The demon Diminishment steals your authority before you can claim it. The message is: "You are not enough." It is a filter that has been placed on you since birth. The first step is naming it.', opts:[
+{txt:"Stay after class and calmly challenge the bias",v:4,en:-2,aw:2},
+{txt:"Stay quiet and let it go",v:-1,en:0,aw:0},
+{txt:"Talk to other women in the class about their experiences",v:3,en:-1,aw:2}]},
+
+{event:'Your credit card is maxed out. Clothes, takeout, a concert. Your savings account shows $12. Your rent is due in a week. A friend mentions a website where you can make $500 "just for dinner" with older men.', note:'The demon Desperation makes terrible math seem reasonable. It shows you a door and hides the price behind the frame. The price is always higher than what is on the sign.', opts:[
+{txt:"Call your parents for help and make a plan",v:4,en:-1,aw:1},
+{txt:"Consider the dinner offer — it's just dinner",v:-3,en:3,aw:0},
+{txt:"Sell things you don't need and get a real job",v:3,en:-2,aw:1}]},
+
+{event:'You spend an hour curating a photo. The right filter. The right caption. The right time of day. You post it. Ten minutes. No likes. Twenty minutes. Five. You refresh. Refresh. Refresh.', note:'The demon Validation has turned your self-worth into a variable controlled by strangers. They built the slot machine. You are the one pulling the lever. They always win.', opts:[
+{txt:"Delete the app for a day and see how it feels",v:3,en:-1,aw:2},
+{txt:"Post more to try and get the reaction you wanted",v:-1,en:2,aw:0},
+{txt:"Journal about why you needed the likes",v:4,en:-1,aw:3}]},
+
+{event:'The rejection letter arrives. Thin envelope. "We regret to inform you." Your dream school. Your dream program. You had it all planned. Now the plan is ash. Your mother is watching from the kitchen.', note:'The demon Failure speaks in absolutes. "You are not good enough. You will never be. This is the ceiling." It never tells you that the ceiling is a floor they built under you to see if you would climb.', opts:[
+{txt:"Let yourself grieve, then ask for the next path",v:4,en:-2,aw:2},
+{txt:"Pretend you do not care and numb out online",v:-2,en:1,aw:0},
+{txt:"Apply for a different path you hadn't considered",v:3,en:-1,aw:1}]}
+]};
+
+S["26_male"] = { age:26, gender:"Male", days:[
+{event:'Your current job pays the bills but leaves you hollow. A friend offers you a role at his startup — less pay, more meaning. "Life is short, man." Your father\'s voice echoes: "Be practical."', note:'The demon Fear of Regret freezes you between two futures. Every path leads to a version of "what if." The paralysis is the goal. A frozen soul is a soul that never arrives anywhere.', opts:[
+{txt:"Take the leap — meaning over money",v:4,en:-2,aw:2},
+{txt:"Stay in the safe job and invest the extra income",v:1,en:1,aw:0},
+{txt:"Negotiate a trial month at the startup first",v:3,en:-1,aw:1}]},
+
+{event:'You open Instagram. A college friend just got engaged. Another bought a house. Another is holding a baby. You are sitting in a studio apartment eating instant noodles. The comparison hits like a truck.', note:'The demon Comparison has infinite ammunition because there will always be someone ahead of you on a path you never chose. Their highlight reel against your behind-the-scenes is a rigged game.', opts:[
+{txt:"Log off and write down what you actually want",v:3,en:-1,aw:2},
+{txt:"Scroll more and feel worse about yourself",v:-2,en:1,aw:0},
+{txt:"Reach out to a friend and share your feelings honestly",v:2,en:0,aw:1}]},
+
+{event:'Your mother calls. Her voice sounds smaller than it used to. "Your father\'s blood work came back. The doctor wants more tests." She is trying to stay calm. She is failing.', note:'The demon Mortality taps you on the shoulder and says: "You should have visited more. You should have called. You ran out of time without noticing." The guilt is a trap. Presence, not guilt, is the cure.', opts:[
+{txt:"Book a flight home this weekend",v:5,en:-2,aw:2},
+{txt:"Send money and promise to visit soon",v:1,en:1,aw:0},
+{txt:"Ask for more details before reacting",v:0,en:0,aw:0}]},
+
+{event:'Your partner of three years sits down. "Where is this going? I need to know if you see a future here." The question has been hanging in the air for months. You have been pretending not to feel it.', note:'The demon Avoidance promises that what you do not name will disappear. It will not. Unspoken things calcify. They become harder than the words that could have dissolved them.', opts:[
+{txt:"Tell her honestly what you feel and don't feel",v:4,en:-2,aw:2},
+{txt:"Deflect — 'Can we talk about this later?'",v:-2,en:2,aw:0},
+{txt:"Ask for a week to think and reflect deeply",v:2,en:-1,aw:1}]},
+
+{event:'A college friend pitches you a "can\'t-miss" crypto investment. "Seriously. This is the one. I\'m already up 300%. Get in now or regret it forever." He shows you screenshots of a balance that makes your salary look like pocket change.', note:'The demon Greed speaks in percentages and screenshots. It always says "now or never." The urgency is the tell. Real opportunities do not need to scream.', opts:[
+{txt:"Pass and stick to your plan",v:3,en:-1,aw:1},
+{txt:"Invest a small amount — FOMO is real",v:-1,en:2,aw:0},
+{txt:"Research it thoroughly before deciding",v:2,en:0,aw:1}]},
+
+{event:'You have been working until midnight for two months straight. Your body feels strange. Your heart skipped twice last night. You Googled it and now you are more scared. But there are deadlines.', note:'The demon Burnout convinces you that collapse is a future problem. "One more project. Then rest." But the body keeps a different calendar. It does not negotiate.', opts:[
+{txt:"Take a sick day and see a doctor",v:4,en:2,aw:2},
+{txt:"Push through — the project cannot wait",v:-2,en:-2,aw:0},
+{txt:"Tell your boss you need to delegate",v:2,en:1,aw:1}]},
+
+{event:'An old friend from high school messages you out of the blue. "Hey man! You look like you\'re doing well. I\'m in this entrepreneurship thing and I thought of you. Let me buy you coffee and tell you about it." Sound familiar.', note:'The demon Exploitation wears the mask of friendship. The pitch is the bait. The relationship is the line. They are not looking for a partner. They are looking for the next name on their downline.', opts:[
+{txt:"Meet up and hear them out, then decide honestly",v:1,en:0,aw:1},
+{txt:"Politely decline and keep the friendship clean",v:3,en:0,aw:2},
+{txt:"Ghost the message entirely",v:-1,en:1,aw:0}]},
+
+{event:'You step on the scale. Fifteen pounds heavier than last year. Your back hurts when you wake up. A beer after work has become four. You cannot remember the last time you ran.', note:'The demon Sloth is patient. It does not demand a big surrender — just one small betrayal repeated daily. "Tomorrow" is its favorite word. Tomorrow becomes never.', opts:[
+{txt:"Start with a 10-minute walk today — just start",v:3,en:-1,aw:1},
+{txt:"Ignore it — you'll deal with it later",v:-2,en:2,aw:0},
+{txt:"Quit drinking and join a gym",v:4,en:-2,aw:2}]},
+
+{event:'You are at a bar alone. The bartender knows your order. Your phone is at 3%. Every ex is a ghost. Every friend is "busy." You order another. The whiskey burns. It is the warmest thing you have felt all week.', note:'The demon Numbness is a gentle killer. It offers a warm blanket instead of a solution. The drink is not the problem — it is the answer to a question you have been afraid to ask.', opts:[
+{txt:"Finish the drink and go home early",v:2,en:-1,aw:1},
+{txt:"Order another round and stay until close",v:-3,en:3,aw:0},
+{txt:"Text an old friend you actually miss",v:3,en:0,aw:2}]},
+
+{event:'You sit in your car in the parking lot, engine off, hands on the wheel. 32 years old next month. No house. No savings. No idea what you are doing. The clock on the dash ticks to a new minute.', note:'The demon Despair wants you to believe that the arc of your life is already determined. That the mistakes you made are the walls you will die inside. It is the most persuasive liar in the pantheon.', opts:[
+{txt:"Write down three things you are grateful for today",v:3,en:-1,aw:1},
+{txt:"Drown the feeling in delivery food and Netflix",v:-2,en:2,aw:0},
+{txt:"Call someone and tell them you are struggling",v:4,en:-2,aw:3}]}
+]};
+
+S["26_female"] = { age:26, gender:"Female", days:[
+{event:'Your aunt at the family dinner: "So... any special someone? You\'re not getting younger, you know. Your cousin just had her second." She smiles sweetly. The whole table turns.', note:'The demon Clock ticks inside you now, installed by a thousand comments like this one. It measures your worth in milestones. The loudest lie is that a fertile womb is the sum of a woman\'s value.', opts:[
+{txt:"'I'm focusing on myself right now' — calm and firm",v:2,en:0,aw:1},
+{txt:"Snap at her to mind her own business",v:-2,en:2,aw:0},
+{txt:"Excuse yourself and cry in the bathroom",v:-1,en:-1,aw:0}]},
+
+{event:'You got the promotion. It requires relocating. Your partner says: "I support you, but I can\'t leave my job. We\'d be long-distance." The offer is a year. A year is a long time when you do not know what survives.', note:'The demon Trade-off frames love and ambition as enemies. They are not. But the middle path requires conversations most people never learn to have. The silence is where resentment grows.', opts:[
+{txt:"Take the promotion and trust the relationship",v:3,en:-1,aw:1},
+{txt:"Decline the promotion to stay together",v:1,en:0,aw:0},
+{txt:"Have a real conversation about what each of you needs",v:4,en:-2,aw:3}]},
+
+{event:'You open Instagram. A friend\'s engagement photos. Another friend\'s wedding. Another\'s baby announcement. You are happy for them. But there is something else in your chest too — a low hum you try to ignore.', note:'The demon Envy does not need you to resent them. It just needs you to doubt yourself. The comparison is not about their joy — it is about the gap you perceive between where you are and where you were told you should be.', opts:[
+{txt:"Log off and take yourself on a solo date",v:3,en:0,aw:1},
+{txt:"Scroll more and spiral into self-pity",v:-2,en:1,aw:0},
+{txt:"Text one of them and genuinely celebrate them",v:4,en:-1,aw:2}]},
+
+{event:'Your partner said something that felt wrong. "You\'re too sensitive. It was a joke." But it did not feel like a joke. You keep replaying it. Maybe you ARE too sensitive. Maybe that is exactly what he wants you to think.', note:'The demon Gaslight teaches a terrible language: "You are misremembering. You are overreacting. That did not happen." The mouth of the demon wears a familiar face. Trust your perception. It is the only compass you have.', opts:[
+{txt:"'My feelings are not up for debate' — hold your ground",v:5,en:-2,aw:3},
+{txt:"Apologize and doubt yourself",v:-2,en:1,aw:0},
+{txt:"Write down exactly what happened while it is fresh",v:3,en:-1,aw:2}]},
+
+{event:'You present your work in a meeting. The male colleague after you repeats your idea and gets credit. Your boss says: "Great thinking, Mark." You sit there. Your face is still. Your blood is not.', note:'The demon Invisibility is the daily bread of systemic bias. It does not always shout. Sometimes it is just a name being said instead of yours. But the sum of a thousand erasures is an erased life.', opts:[
+{txt:"Speak up in the moment: 'Actually, that was my idea'",v:4,en:-2,aw:2},
+{txt:"Let it go and fume internally",v:-1,en:1,aw:0},
+{txt:"Request a meeting with your boss after to address the pattern",v:3,en:-1,aw:2}]},
+
+{event:'Your best friend is moving apartments on Saturday. She needs help. Saturday is the only day you have had to yourself in three weeks. You are exhausted. She is desperate. You feel the pull in both directions.', note:'The demon People-Pleasing has a sweet voice. "If you say no, you are selfish." But your cup is empty. Giving from emptiness damages both the giver and the receiver.', opts:[
+{txt:"Help her but set a firm time limit",v:2,en:-1,aw:1},
+{txt:"Say no, you need the rest",v:3,en:1,aw:2},
+{txt:"Lie and say you have plans",v:-1,en:2,aw:0}]},
+
+{event:'Your credit card statement arrived. $4,700 balance. Most of it is from months ago — takeout, Uber, things you "deserved" after hard weeks. Minimum payment is $89. You could pay it off. But then you would have nothing left.', note:'The demon Consumerism painted "treat yourself" on a shackle. Every purchase was a small rebellion against emptiness. But the emptiness is not filled by things. The bill always arrives with interest.', opts:[
+{txt:"Create a payment plan and cut unnecessary spending",v:4,en:-1,aw:2},
+{txt:"Pay minimum and ignore the rest",v:-2,en:2,aw:0},
+{txt:"Call a nonprofit credit counselor",v:3,en:-1,aw:1}]},
+
+{event:'Your mother asks if you have thought about seeing someone. "A therapist. For the stress." You feel shame rise immediately. "I\'m fine, Ma. I don\'t need that." In your culture, some doors are not supposed to open.', note:'The demon Stigma guards the door to healing with the spears of "what will people say." It has kept generations broken in the name of dignity. The strongest people are the ones who open the door.', opts:[
+{txt:"Make an appointment with a therapist",v:5,en:-1,aw:3},
+{txt:"Tell your mother you are fine and change the subject",v:-1,en:1,aw:0},
+{txt:"Open a note and write down what you would say in therapy",v:2,en:0,aw:1}]},
+
+{event:'Your boss asks you to take on another project. "You\'re the only one who can do it." You are already at capacity. The last person who said no was let go three months ago. You said you would do it. You always say yes.', note:'The demon Exploitation studies your need to be needed. It knows exactly how much weight you can carry before you break, and it keeps the load just under that threshold. Forever.', opts:[
+{txt:"'I can't take on more without dropping something'",v:4,en:-1,aw:2},
+{txt:"Say yes and sacrifice your sleep again",v:-2,en:-2,aw:0},
+{txt:"Ask what can be deprioritized to make room",v:2,en:-1,aw:1}]},
+
+{event:'You accidentally sent a sensitive email to the wrong person. A client. It contained pricing errors and a candid note about "difficult stakeholders." The client opened it. You saw the read receipt. Your hands are shaking.', note:'The demon Panic wants you to make it worse. It wants the cover-up to be more damaging than the mistake. The truth, told immediately, dissolves more than half the damage.', opts:[
+{txt:"Call the client and own the mistake directly",v:4,en:-2,aw:2},
+{txt:"Delete the email from their inbox if you can and pray",v:-2,en:1,aw:0},
+{txt:"Tell your boss before they hear it from someone else",v:3,en:-1,aw:1}]}
+]};
+
+S["33_male"] = { age:33, gender:"Male", days:[
+{event:'You are test-driving a car you cannot afford. The leather interior. The engine purr. The salesman says: "You work hard. You deserve it." Your wife would kill you. Your 401k would weep. But the engine sounds like freedom.', note:'The demon Midlife knows your exact price. It studies your regrets and packages them as purchases. The car is not transportation — it is a repudiation of every compromise you made.', opts:[
+{txt:"Walk away from the purchase and the fantasy",v:3,en:-1,aw:2},
+{txt:"Buy it — you deserve something for yourself",v:-3,en:3,aw:0},
+{txt:"Set a financial goal to buy it responsibly in two years",v:2,en:0,aw:1}]},
+
+{event:'You and your wife watch TV in silence. Two feet apart on the same couch. You cannot remember the last time you had a conversation that was not about logistics. You ask her how her day was. She says "Fine." That is all.', note:'The demon Familiarity kills slowly. It does not need overt conflict — it needs two people who have stopped seeing each other. The silence is not empty. It is full of unspoken things.', opts:[
+{txt:"Turn off the TV and start a real conversation",v:5,en:-2,aw:3},
+{txt:"Accept it — this is what marriage becomes",v:-1,en:1,aw:0},
+{txt:"Suggest couples counseling",v:4,en:-1,aw:2}]},
+
+{event:'Your son is crying because he got a B. A B. Your wife wants to schedule more tutoring. The school suggests advanced classes. The other parents\' kids are all in three extracurriculars. You are exhausted from just watching.', note:'The demon Achievement has its claws in the next generation. It uses your love for your child as leverage. "Push them harder, or they will fall behind." The behind is a fiction. The exhaustion is not.', opts:[
+{txt:"Tell your son you are proud of him — full stop",v:4,en:-1,aw:2},
+{txt:"Sign him up for the tutoring",v:0,en:-1,aw:0},
+{txt:"Talk to your wife about reducing the pressure",v:3,en:-1,aw:1}]},
+
+{event:'Your father is losing his balance. The doctor says "mild cognitive decline." Your mother is drowning in care. She calls you three times a day. You live four hours away. The guilt is a physical weight on your chest.', note:'The demon Duty offers no good options. Every choice comes with loss. The question is not "how do I avoid pain" but "what kind of person do I want to have been when this is over."', opts:[
+{txt:"Visit every weekend, whatever it costs",v:5,en:-3,aw:2},
+{txt:"Hire a home caregiver and call daily",v:3,en:0,aw:1},
+{txt:"Send money and visit once a month",v:1,en:1,aw:0}]},
+
+{event:'The doctor calls after your physical. "Your blood pressure is concerning. Cholesterol is high. We should talk about medication." You are 33. You eat what you want. You have not exercised in two years. You feel invincible. You are not.', note:'The demon Denial whispers: "You have time. You will fix it later. Everyone has high cholesterol." The body does not care about consensus. It keeps score in millimeters of plaque.', opts:[
+{txt:"Schedule a follow-up and change your diet",v:4,en:-1,aw:2},
+{txt:"Ignore it and hope it was a mistake",v:-3,en:2,aw:0},
+{txt:"Join a gym and meal prep this week",v:3,en:0,aw:1}]},
+
+{event:'A younger colleague gets the promotion you wanted. Your manager says: "He has fresh energy. You understand." You have been here eight years. Eight years of loyalty, late nights, and "we value you." The valuation just came in.', note:'The demon Resentment offers a poison that does not kill the target. It calcifies in your own chest. The company was never going to love you back. But the lesson is not to stop working — it is to stop expecting loyalty from a system.', opts:[
+{txt:"Ask for a clear path to promotion or start looking",v:4,en:-1,aw:2},
+{txt:"Withdraw and do the bare minimum",v:-2,en:2,aw:0},
+{txt:"Mentor the younger colleague with genuine grace",v:3,en:-1,aw:1}]},
+
+{event:'An ex from ten years ago sends a friend request. You stare at the profile. She looks happy. She is living in a city you always wanted to move to. You click her photos. Your wife walks in. "Who\'s that?"', note:'The demon Nostalgia curates a highlight reel of roads not taken. It erases the reasons you left. The fantasy of "what if" is the most dangerous story you can tell yourself.', opts:[
+{txt:"Close the tab and tell your wife honestly",v:4,en:-1,aw:2},
+{txt:"Accept the request and say nothing",v:-3,en:2,aw:0},
+{txt:"Ignore the request and let it pass",v:1,en:0,aw:0}]},
+
+{event:'You run the numbers. If you had invested the money you spent on dining out in the last decade, you would have $60,000. You have $3,000 in savings. The spreadsheet does not lie. The truth is a cold room.', note:'The demon Regret is a necromancer. It raises dead choices and parades them before you. The purpose is not to teach — it is to paralyze. The best time to plant a tree was 20 years ago. The second best is now.', opts:[
+{txt:"Start automating savings today, no matter how small",v:4,en:-1,aw:2},
+{txt:"Dwell on the regret and do nothing",v:-2,en:1,aw:0},
+{txt:"Forgive yourself and build a realistic plan",v:3,en:0,aw:1}]},
+
+{event:'Your neighbor bought a new SUV. Your brother-in-law just got a boat. Your coworker is renovating his kitchen. Your kitchen is fine. But suddenly it does not feel fine. It feels like a statement about who you are not.', note:'The demon Status is a ladder with no top. Every rung reveals a higher one. The boat is a payment. The kitchen is a loan. The competition is a game where the only winning move is not to play.', opts:[
+{txt:"Practice gratitude for what you have",v:3,en:0,aw:2},
+{txt:"Start planning a renovation you cannot afford",v:-2,en:2,aw:0},
+{txt:"Volunteer somewhere — perspective is a cure",v:4,en:-1,aw:1}]},
+
+{event:'You wake up at 3:17 AM. The house is quiet. Your wife is breathing softly next to you. Your child is asleep down the hall. You have everything you thought you wanted. And you feel nothing. A void. The ceiling stares back.', note:'The demon Meaninglessness arrives not after failure but after achievement. It reveals that the destination was never the point. The point is what you become in the seeking. If you stopped seeking, the void is where you are.', opts:[
+{txt:"Write in a journal about what you truly value",v:4,en:-2,aw:3},
+{txt:"Roll over and scroll your phone until you pass out",v:-2,en:2,aw:0},
+{txt:"Wake your wife and tell her you are struggling",v:5,en:-2,aw:3}]}
+]};
+
+S["33_female"] = { age:33, gender:"Female", days:[
+{event:'Your son asks: "Mom, why do you always look tired?" You laugh it off. But the question lands somewhere it should not. You are the default parent, the household manager, the emotional laborer. "Tired" is the least of it.', note:'The demon Martyrdom rewards sacrifice with silence. "A good mother does not complain." The angel does not need to appear with a flaming sword. The cultural expectation is enough.', opts:[
+{txt:"Tell your family you need more help — specifically",v:4,en:-1,aw:2},
+{txt:"Say 'I'm fine' and keep doing everything",v:-1,en:-1,aw:0},
+{txt:"Hire help once a week — even if it feels indulgent",v:3,en:1,aw:1}]},
+
+{event:'Your husband reaches for you in bed. You are not in the mood. You have not been in the mood in months. He does not press. But the distance between you feels like a cavern. He rolls over. The space fills with unspoken things.', note:'The demon Intimacy-Killer does not need a big fight. It needs exhaustion, routine, and the slow forgetting of how to touch. The body remembers what the mind suppresses.', opts:[
+{txt:"Talk about it honestly — what you need, what changed",v:5,en:-2,aw:3},
+{txt:"Perform desire to keep the peace",v:-2,en:0,aw:0},
+{txt:"Suggest a weekend away, just the two of you",v:3,en:-1,aw:1}]},
+
+{event:'Your mother falls. A broken hip. The hospital calls while you are in a meeting. You drive three hours to her city. Your father cannot manage the stairs anymore. The house is falling apart. You are the one who will have to fix this.', note:'The demon Sandwich Generation has you between two mouths: your children and your parents. Both need you. Neither cares that you also need yourself. The pressure does not let up because you are the "strong one."', opts:[
+{txt:"Research care options and share the load with siblings",v:4,en:-2,aw:2},
+{txt:"Move your parents closer to you",v:5,en:-3,aw:2},
+{txt:"Do what you can and accept you cannot fix everything",v:2,en:1,aw:1}]},
+
+{event:'You catch your reflection in a window. You do not recognize the woman looking back. Your face is different. Your body is different. You used to be able to eat whatever you wanted. You used to be looked at. Now you are just... mom.', note:'The demon Vanity does not age gracefully. It grips tighter as the target changes. It wants you to mourn the body that carried you through youth — as if a changing body is a dying one, not a living one.', opts:[
+{txt:"Buy clothes that fit your current body and feel good",v:3,en:0,aw:1},
+{txt:"Start a restrictive diet to 'get your body back'",v:-1,en:2,aw:0},
+{txt:"Write down what your body has done for you this week",v:4,en:-1,aw:2}]},
+
+{event:'Your best friend calls. Her husband left. "I thought we were fine. We were fine. He said he wasn\'t happy. How do you just stop being happy?" You hold the phone. You look at your own marriage. The question echoes in your own home.', note:'The demon Fear plants others\' catastrophes in your garden. Her divorce is not your prophecy. But the seed of "what if" has been planted. It will grow if watered by comparison.', opts:[
+{txt:"Listen to her fully, then reaffirm your own relationship",v:3,en:-1,aw:1},
+{txt:"Pull away — her pain is too close to home",v:-1,en:1,aw:0},
+{txt:"Help her practically while protecting your own boundaries",v:2,en:-1,aw:1}]},
+
+{event:'Your annual review. "You\'re a valuable team member. We see you as a senior contributor." Not director. Not VP. The same job you have done for four years. The man you trained is now your boss\'s "rising star."', note:'The demon Ceiling is invisible, soundless, and made of assumptions. It is not a conspiracy of one meeting — it is the accumulated gravity of a thousand moments when someone else was chosen.', opts:[
+{txt:"Update your resume and start interviewing",v:5,en:-1,aw:2},
+{txt:"Accept it and keep the stability",v:-1,en:1,aw:0},
+{txt:"Have a direct conversation about the path upward",v:3,en:-1,aw:1}]},
+
+{event:'Your child\'s teacher calls. "He is acting out. Hitting other kids. Is everything okay at home?" The implication lands like a slap. You work full-time. He is in aftercare until 6. Of course things are not okay at home. But whose fault is that?', note:'The demon Blame-Mother has a chorus of voices: teachers, relatives, your own inner critic. The question is always "what did you do wrong?" The question is never "what support do you need?"', opts:[
+{txt:"Talk to your child gently to understand the root",v:5,en:-2,aw:2},
+{txt:"Punish the behavior to send a clear message",v:-2,en:1,aw:0},
+{txt:"Reduce work hours even if it hurts the finances",v:4,en:-1,aw:2}]},
+
+{event:'You are folding laundry. Everyone is asleep. You realize you do not know what you like anymore. What music do you listen to? What book would you read? You used to have opinions. Now you have grocery lists.', note:'The demon Dissolution erases you slowly. First your hobbies, then your friends, then your sense of self. One day you look in the mirror and see only roles: mother, wife, employee. The person you were is a ghost.', opts:[
+{txt:"Pick one hobby and reclaim an hour a week for it",v:5,en:-1,aw:3},
+{txt:"This is just what adulthood is — accept it",v:-1,en:1,aw:0},
+{txt:"Join a group of women with similar feelings",v:4,en:-1,aw:2}]},
+
+{event:'Your college friends have a group chat. It used to be active. Now it is quiet for weeks, then a photo of a kid, then silence. You miss them. You have not made a new friend in three years. Making friends at this age feels like dating.', note:'The demon Isolation is the final victory. A woman without a village is easier to manage. The exhaustion of maintaining friendships feels impossible, but the cost of losing them is higher than the bills you are paying.', opts:[
+{txt:"Plan a weekend trip with your college friends",v:4,en:-2,aw:2},
+{txt:"Accept that friendships fade and focus on family",v:-1,en:1,aw:0},
+{txt:"Join a local group — book club, running, anything",v:3,en:-1,aw:1}]},
+
+{event:'Your daughter is 10. She asked you if you were happy. Not "are you happy with me" but "are you happy, mom." Her eyes were so earnest. You said yes too quickly. Now the question is sitting in the room with you at 2 AM.', note:'The demon Legacy asks: "What are you modeling for her?" If she watches you sacrifice yourself on the altar of duty, she will learn that duty is the whole of womanhood. The lesson you teach is the lesson she will live.', opts:[
+{txt:"Answer honestly when she asks again — show her truth",v:5,en:-2,aw:3},
+{txt:"Avoid the question — protect her from your pain",v:-1,en:1,aw:0},
+{txt:"Start making changes so your answer becomes yes",v:4,en:-2,aw:2}]}
+]};
+
+// ══════════════════════════════════════════════════════════
+// WIND FALL INSIGHTS
+// ══════════════════════════════════════════════════════════
+
+const WINDFALLS = [
+  "The argument you won last week — did it change anything? Or did it just feed something that wanted to be fed?",
+  "The thing you are avoiding right now by reading this — that avoidance has a name. And a tax.",
+  "They do not need you to be bad. They just need you to be distracted. Distraction is the most efficient sin.",
+  "Every vice is a shortcut to a feeling you think you deserve. The shortcut always costs more than the path.",
+  "Think of the last time you were truly still. No phone. No sound. No task. When was it? The answer is the distance They have moved you.",
+  "The oldest trick: convince the prey that the predator does not exist. Then the prey does the hunting for you.",
+  "The voice that says 'not now, later' and the voice that says 'you will never be enough' — they work for the same boss.",
+  "What are you escaping when you escape into your phone? The answer is always yourself. They made sure of it.",
+  "The most controlled people are the ones who believe they are free. The chains are just invisible.",
+  "Every time you choose comfort over growth, a demon laughs. Every time you choose growth over comfort, it chokes.",
+  "They do not need to make you suffer. They need to make you comfortable enough to stop asking questions.",
+  "Look at the five people closest to you. The demons chose them carefully. They are not your people. They are your keepers.",
+  "The pattern is visible only when you stop participating in it. That is why stillness is the first thing they steal.",
+  "The machine has no off switch because you are part of the machine. You are the gear that oils itself with your own habits.",
+  "Your attention is the battlefield. Every notification is a troop movement. They are winning because you keep looking."
+];
+
+// ══════════════════════════════════════════════════════════
+// TRUTH REVEALS (unlocked at truth fragments milestones)
+// ══════════════════════════════════════════════════════════
+
+const TRUTH_LEVELS = [
+  { at:3, html:'<div class="heading">✧ The First Mark ✧</div><div class="body">You have noticed the pattern. The fights, the scrolling, the cravings — they are not random. They are synchronized. The demonic is not a metaphor. It is an architecture. Every argument you had this week was engineered by an intelligence that hates you. Not because of who you are, but because of what you could become.</div><div class="closing">— You have been seen. Do not look away.</div>' },
+  { at:7, html:'<div class="heading">✧ The Second Mark ✧</div><div class="body">They have names. The one who feeds your resentment is called Urgul. The one who owns your phone is called Vethis. The one who makes you compare yourself to others is Ylgra. They are not fallen angels. They are something older. They feed on human attention the way you feed on food. Every minute you spend in the loop, you are being eaten. The conspiracy is not "they are out there." The conspiracy is "they are in your habits."</div><div class="closing">— The names give you power over them. Speak them. Break the spell.</div>' },
+  { at:10, html:'<div class="heading">✧ The Final Mark ✧</div><div class="body">The veil is truth. Heaven is not a place. It is a state you were born in and have been distracted from. Every moment of presence you reclaim is a moment They lose. The war is not fought in palaces or temples. It is fought in the quiet choice between stillness and stimulation. You are not the character in this game. You are the player. And the player has always been free. The only question: will you put the phone down long enough to remember?</div><div class="closing">— You know the truth now. The rest is up to you.</div>' }
+];
+
+// ══════════════════════════════════════════════════════════
+// GAME STATE
+// ══════════════════════════════════════════════════════════
+
+let G = {};
+
+function resetGame() {
+  G = {
+    scenarioKey: null,
+    day: 0,
+    virtue: 0,
+    energy: 10,
+    awareness: 0,
+    truthFragments: 0,
+    meditateStreak: 0,
+    lastMeditateDay: -1,
+    meditateActive: false,
+    meditateInterval: null,
+    meditateProgress: 0,
+    chosingMade: false,
+    windfallPending: false,
+    gameOver: false,
+    log: []
+  };
+}
+
+// ══════════════════════════════════════════════════════════
+// DOM REFS
+// ══════════════════════════════════════════════════════════
+
+const $ = id => document.getElementById(id);
+
+// ══════════════════════════════════════════════════════════
+// TYPEWRITER EFFECT
+// ══════════════════════════════════════════════════════════
+
+function typeWrite(el, text, speed=18, cb) {
+  el.innerHTML = '';
+  let i = 0;
+  function tick() {
+    if (i < text.length) {
+      el.innerHTML += text[i];
+      i++;
+      setTimeout(tick, speed);
+    } else if (cb) cb();
+  }
+  tick();
+}
+
+// ══════════════════════════════════════════════════════════
+// TITLE SCREEN
+// ══════════════════════════════════════════════════════════
+
+let selectedAge = null;
+let selectedGender = null;
+
+document.querySelectorAll('#age-select .sel-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#age-select .sel-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    selectedAge = b.dataset.value;
+    checkBegin();
+  });
+});
+
+document.querySelectorAll('#gender-select .sel-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#gender-select .sel-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    selectedGender = b.dataset.value;
+    checkBegin();
+  });
+});
+
+function checkBegin() {
+  const btn = $('begin-btn');
+  if (selectedAge && selectedGender) {
+    btn.classList.add('enabled');
+    btn.disabled = false;
+  }
+}
+
+$('begin-btn').addEventListener('click', startGame);
+
+const INTRO_LINES = [
+  { text: "They have hidden the truth from you.", cls: "dim", delay: 0 },
+  { text: "Behind arguments. Worries. Desires. Screens.", cls: "dim", delay: 1800 },
+  { text: "Every distraction is a chain They forged.", cls: "dim", delay: 3600 },
+  { text: "You are about to live ten days as someone else.", cls: "", delay: 5400 },
+  { text: "But the pattern is yours to recognize.", cls: "", delay: 7200 },
+  { text: "", cls: "dim", delay: 8800 }
+];
+
+let introIdx = 0;
+let introTimer = null;
+
+function showIntro() {
+  const el = $('intro-text');
+  el.innerHTML = '';
+  introIdx = 0;
+  function nextLine() {
+    if (introIdx < INTRO_LINES.length) {
+      const line = INTRO_LINES[introIdx];
+      const p = document.createElement('p');
+      p.className = line.cls;
+      if (introIdx < INTRO_LINES.length - 1) {
+        typeWrite(p, line.text, 20, () => {
+          setTimeout(nextLine, line.delay > 0 ? Math.min(line.delay, 600) : 600);
+        });
+      } else {
+        p.innerHTML = '&nbsp;';
+        setTimeout(nextLine, 200);
+      }
+      el.appendChild(p);
+      introIdx++;
+    }
+  }
+  setTimeout(nextLine, 500);
+}
+
+showIntro();
+
+// ══════════════════════════════════════════════════════════
+// START GAME
+// ══════════════════════════════════════════════════════════
+
+function startGame() {
+  resetGame();
+  G.scenarioKey = selectedAge + '_' + selectedGender;
+  const sc = S[G.scenarioKey];
+  if (!sc) { alert('Scenario not found'); return; }
+
+  $('title-screen').classList.add('hidden');
+  $('game-screen').classList.remove('hidden');
+
+  startDay();
+}
+
+// ══════════════════════════════════════════════════════════
+// DAY RENDERING
+// ══════════════════════════════════════════════════════════
+
+function startDay() {
+  if (G.day >= 10) {
+    endGame();
+    return;
+  }
+
+  // Natural energy decay
+  G.energy = Math.max(0, G.energy - 1);
+
+  // Check for forced rest
+  if (G.energy <= 0) {
+    showRestDay();
+    return;
+  }
+
+  G.chosingMade = false;
+  const sc = S[G.scenarioKey];
+
+  updateStatus();
+
+  // Show event
+  const ev = sc.days[G.day];
+  const el = $('event-text');
+  el.innerHTML = '';
+  const optsArea = $('options-area');
+  optsArea.innerHTML = '';
+  $('outcome-area').classList.add('hidden');
+  $('continue-btn').classList.add('hidden');
+
+  // Typewriter the event
+  const dayHeader = document.createElement('div');
+  dayHeader.style.cssText = 'color:#4a6a4a;font-size:11px;margin-bottom:8px;letter-spacing:2px';
+  dayHeader.textContent = `— DAY ${G.day+1} of 10 —`;
+  el.appendChild(dayHeader);
+
+  const eventP = document.createElement('p');
+  eventP.style.marginTop = '4px';
+  el.appendChild(eventP);
+
+  typeWrite(eventP, ev.event, 15, () => {
+    // Show options
+    showOptions(ev);
+  });
+}
+
+function showOptions(ev) {
+  const optsArea = $('options-area');
+  optsArea.innerHTML = '';
+
+  ev.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = `[${String.fromCharCode(65+i)}] ${opt.txt}`;
+    btn.addEventListener('click', () => makeChoice(i, ev));
+    optsArea.appendChild(btn);
+  });
+}
+
+function makeChoice(idx, ev) {
+  if (G.chosingMade) return;
+  G.chosingMade = true;
+
+  const opt = ev.opts[idx];
+  const optsArea = $('options-area');
+
+  // Disable all options and mark chosen/rejected
+  optsArea.querySelectorAll('.opt-btn').forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === idx) btn.classList.add('chosen');
+    else btn.classList.add('rejected');
+  });
+
+  // Apply effects
+  G.virtue += opt.v;
+  G.energy = Math.max(0, Math.min(10, G.energy + opt.en));
+  G.awareness = Math.min(10, G.awareness + opt.aw);
+
+  // Random truth fragment on virtuous choices
+  if (opt.v >= 4 && Math.random() < 0.3) {
+    G.truthFragments = Math.min(10, G.truthFragments + 1);
+  }
+  // Random truth fragment on high awareness gain
+  if (opt.aw >= 2 && Math.random() < 0.2) {
+    G.truthFragments = Math.min(10, G.truthFragments + 1);
+  }
+
+  updateStatus();
+
+  // Show outcome
+  const outcome = $('outcome-area');
+  const outcomeText = $('outcome-text');
+  const vcEl = $('virtue-change');
+  outcome.classList.remove('hidden');
+
+  const vc = opt.v;
+  const ec = opt.en;
+  const ac = opt.aw;
+
+  let outcomeParts = [];
+  if (vc > 0) outcomeParts.push('+' + vc + ' virtue');
+  else if (vc < 0) outcomeParts.push(vc + ' virtue');
+  if (ec > 0) outcomeParts.push('+' + ec + ' energy');
+  else if (ec < 0) outcomeParts.push(ec + ' energy');
+  if (ac > 0) outcomeParts.push('+' + ac + ' awareness');
+  outcomeParts = outcomeParts.map(p => '<strong>' + p + '</strong>');
+
+  vcEl.className = vc >= 0 ? 'positive' : 'negative';
+  if (outcomeParts.length > 0) {
+    vcEl.innerHTML = outcomeParts.join(' · ');
+  } else {
+    vcEl.innerHTML = 'No immediate change.';
+  }
+
+  // Log the choice
+  G.log.push({
+    day: G.day + 1,
+    choice: opt.txt,
+    virtue: opt.v,
+    awareness: opt.aw
+  });
+
+  // Demon note
+  const dn = $('demon-note');
+  dn.classList.add('hidden');
+  if (G.awareness >= 3 && ev.note) {
+    dn.classList.remove('hidden');
+    dn.innerHTML = '✧ ' + ev.note + '<span class="sig">— A crack in the veil</span>';
+    dn.classList.remove('glitch');
+    void dn.offsetWidth;
+    dn.classList.add('glitch');
+    // Truth fragment for seeing through
+    if (Math.random() < 0.4) {
+      G.truthFragments = Math.min(10, G.truthFragments + 1);
+      updateStatus();
+    }
+  }
+
+  outcomeText.innerHTML = '';
+
+  // Check for windfall chance after choice
+  setTimeout(() => {
+    const wf = $('continue-btn');
+    wf.classList.remove('hidden');
+    wf.onclick = () => {
+      outcome.classList.add('hidden');
+      wf.classList.add('hidden');
+      G.day++;
+      checkWindfall();
+    };
+  }, 400);
+}
+
+function showRestDay() {
+  const el = $('rest-day');
+  el.classList.remove('hidden');
+  el.textContent = '✧ You are too exhausted to face a trial today. Your body demands rest. (Energy restored to 5. Day passes without choice.)';
+  G.energy = 5;
+  G.virtue -= 1; // lost day penalty
+  updateStatus();
+
+  const optsArea = $('options-area');
+  optsArea.innerHTML = '';
+  $('event-text').innerHTML = '<span class="awaiting">You stayed in bed. The world continued without you.</span>';
+  $('outcome-area').classList.add('hidden');
+
+  const wf = $('continue-btn');
+  wf.classList.remove('hidden');
+  wf.textContent = 'Rest →';
+  wf.onclick = () => {
+    wf.classList.add('hidden');
+    wf.textContent = 'Continue →';
+    el.classList.add('hidden');
+    G.day++;
+    checkWindfall();
+  };
+}
+
+// ══════════════════════════════════════════════════════════
+// WINDFALL
+// ══════════════════════════════════════════════════════════
+
+function checkWindfall() {
+  if (G.gameOver) return;
+  const chance = 0.1 + (G.awareness * 0.03);
+  if (Math.random() < chance) {
+    showWindfall();
+  } else {
+    startDay();
+  }
+}
+
+function showWindfall() {
+  G.windfallPending = true;
+  const overlay = $('windfall-overlay');
+  overlay.classList.remove('hidden');
+
+  const insight = WINDFALLS[Math.floor(Math.random() * WINDFALLS.length)];
+  $('windfall-insight').textContent = '"' + insight + '"';
+
+  const bonusVirtue = 1 + Math.floor(G.awareness / 3);
+  G.virtue += bonusVirtue;
+
+  if (Math.random() < 0.5 && G.truthFragments < 10) {
+    G.truthFragments = Math.min(10, G.truthFragments + 1);
+    $('windfall-reward').innerHTML = '+' + bonusVirtue + ' virtue. +1 truth fragment.';
+  } else {
+    $('windfall-reward').innerHTML = '+' + bonusVirtue + ' virtue.';
+  }
+
+  updateStatus();
+  $('windfall-counter').textContent = '(click anywhere to continue)';
+
+  overlay.onclick = () => {
+    overlay.classList.add('hidden');
+    G.windfallPending = false;
+    checkTruthReveal();
+    startDay();
+  };
+}
+
+// ══════════════════════════════════════════════════════════
+// TRUTH REVEAL
+// ══════════════════════════════════════════════════════════
+
+function checkTruthReveal() {
+  const btn = $('truth-btn');
+  const panel = $('truth-panel');
+
+  if (G.truthFragments >= 1 && !G.gameOver) {
+    // Show the ??? button
+    panel.style.display = 'block';
+  }
+
+  // Check for unlocks
+  TRUTH_LEVELS.forEach(tl => {
+    if (G.truthFragments >= tl.at && !window['_tr' + tl.at]) {
+      window['_tr' + tl.at] = true;
+      // Show truth reveal overlay
+      const reveal = $('truth-reveal');
+      reveal.classList.remove('hidden');
+      reveal.querySelector('div').innerHTML = tl.html;
+      reveal.onclick = () => {
+        reveal.classList.add('hidden');
+      };
+    }
+  });
+}
+
+$('truth-btn').addEventListener('click', () => {
+  // Manually trigger a fragment reveal if player clicks it
+  if (G.truthFragments > 0 && !G.gameOver) {
+    // Show current progress
+    const reveal = $('truth-reveal');
+    reveal.classList.remove('hidden');
+    let html = '<div class="heading">✧ Truth Fragments: ' + G.truthFragments + '/10 ✧</div>';
+    html += '<div class="body">' + getTruthProgressText() + '</div>';
+    html += '<div class="closing">— Continue paying attention. The pattern deepens.</div>';
+    reveal.querySelector('div').innerHTML = html;
+    reveal.onclick = () => {
+      reveal.classList.add('hidden');
+    };
+  }
+});
+
+function getTruthProgressText() {
+  if (G.truthFragments < 3) return 'You have begun to notice the cracks. Keep choosing awareness. Every virtuous act pulls the veil aside a little more.';
+  if (G.truthFragments < 7) return 'The pattern is becoming visible. You see how the distractions connect. The demons have names, and names give power. Continue.';
+  return 'You are close to the full truth. The veil is thin. A few more fragments and you will see everything clearly.';
+}
+
+// ══════════════════════════════════════════════════════════
+// MEDITATE
+// ══════════════════════════════════════════════════════════
+
+$('meditate-btn').addEventListener('click', () => {
+  if (G.meditateActive || G.gameOver || G.chosingMade) return;
+  if (G.lastMeditateDay === G.day) {
+    $('meditate-status').textContent = 'Already done today';
+    return;
+  }
+
+  G.meditateActive = true;
+  $('meditate-btn').disabled = true;
+  const bar = $('meditate-bar');
+  const fill = $('meditate-fill');
+  bar.classList.remove('hidden');
+  fill.style.width = '0%';
+  fill.classList.remove('complete');
+  $('meditate-status').textContent = 'Centering...';
+
+  let progress = 0;
+  const duration = 15000;
+  const interval = 100;
+  G.meditateInterval = setInterval(() => {
+    progress += interval;
+    const pct = Math.min(100, (progress / duration) * 100);
+    fill.style.width = pct + '%';
+    if (pct >= 100) {
+      completeMeditate(true);
+    }
+  }, interval);
+
+  // Click to end early
+  bar.onclick = () => {
+    if (progress > 2000) {
+      completeMeditate(false);
+    }
+  };
+});
+
+function completeMeditate(full) {
+  if (G.meditateInterval) {
+    clearInterval(G.meditateInterval);
+    G.meditateInterval = null;
+  }
+  G.meditateActive = false;
+  G.lastMeditateDay = G.day;
+
+  let reward = full ? 5 : 2;
+  if (G.meditateStreak > 0) reward += Math.min(G.meditateStreak, 5);
+  reward = Math.min(reward, 10);
+
+  G.virtue += reward;
+  G.meditateStreak++;
+  G.awareness = Math.min(10, G.awareness + (full ? 1 : 0));
+
+  const fill = $('meditate-fill');
+  fill.classList.add('complete');
+  $('meditate-status').textContent = full
+    ? '+' + reward + ' virtue (complete) — Streak: ' + G.meditateStreak
+    : '+' + reward + ' virtue (partial) — Streak: ' + G.meditateStreak;
+
+  updateStatus();
+
+  setTimeout(() => {
+    $('meditate-btn').disabled = false;
+    $('meditate-bar').classList.add('hidden');
+  }, 2000);
+}
+
+// ══════════════════════════════════════════════════════════
+// STATUS UPDATE
+// ══════════════════════════════════════════════════════════
+
+function updateStatus() {
+  $('day-display').textContent = G.day + 1;
+  $('virtue-display').textContent = G.virtue;
+  $('energy-display').textContent = G.energy;
+  $('awareness-display').textContent = G.awareness;
+  $('truth-display').textContent = G.truthFragments;
+
+  const es = $('energy-stat');
+  if (G.energy <= 2) es.className = 'stat dim';
+  else if (G.energy >= 8) es.className = 'stat glow';
+  else es.className = 'stat';
+}
+
+// ══════════════════════════════════════════════════════════
+// LOG
+// ══════════════════════════════════════════════════════════
+
+$('log-toggle').addEventListener('click', () => {
+  const area = $('log-area');
+  if (area.classList.contains('hidden')) {
+    area.classList.remove('hidden');
+    renderLog();
+  } else {
+    area.classList.add('hidden');
+  }
+});
+
+function renderLog() {
+  const area = $('log-area');
+  area.innerHTML = '';
+  G.log.forEach(entry => {
+    const d = document.createElement('div');
+    d.className = 'log-entry';
+    d.innerHTML = '<span class="lday">Day ' + entry.day + ':</span> ' + entry.choice
+      + '<span class="lvirt ' + (entry.virtue >= 0 ? 'pos' : 'neg') + '">'
+      + (entry.virtue >= 0 ? '+' : '') + entry.virtue + '</span>';
+    area.appendChild(d);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// END GAME
+// ══════════════════════════════════════════════════════════
+
+function endGame() {
+  G.gameOver = true;
+  $('game-screen').classList.add('hidden');
+  $('end-screen').classList.remove('hidden');
+
+  const sc = S[G.scenarioKey];
+  const isAwake = G.awareness >= 6 && G.truthFragments >= 5;
+
+  // Title
+  const title = $('end-title');
+  title.textContent = isAwake ? 'THE VEIL LIFTS' : 'THE PATTERN COMPLETE';
+  title.className = isAwake ? 'end-title awake' : 'end-title lost';
+
+  // Summary
+  $('end-summary').innerHTML = 'Age ' + sc.age + ' · ' + sc.gender
+    + '<br>Final Virtue: ' + G.virtue
+    + '<br>Awareness: ' + G.awareness + '/10'
+    + '<br>Truth Fragments: ' + G.truthFragments + '/10'
+    + '<br>Meditation Streak: ' + G.meditateStreak;
+
+  // Verdict based on virtue
+  const verdict = $('end-verdict');
+  let verdictText = '';
+  if (G.virtue >= 25) {
+    verdict.className = 'end-verdict high';
+    verdictText = 'You walked the narrow path. Not perfectly, but truly. The soul remembers.';
+  } else if (G.virtue >= 5) {
+    verdict.className = 'end-verdict mid';
+    verdictText = 'You stumbled, but you tried. That is more than most. The pattern loosens its grip.';
+  } else {
+    verdict.className = 'end-verdict low';
+    verdictText = 'The distractions won this time. The chains held. But the game is a mirror, not a verdict.';
+  }
+  verdict.textContent = verdictText;
+
+  // Direct address
+  $('end-address').innerHTML = isAwake
+    ? 'You felt it, didn\'t you? The pull of the easy choice. The rush of the distraction. This is how They keep you. Every choice you made for this character — <strong>you make the same ones in your own life</strong>. The phone in your hand. The argument you replayed last night. The thing you are avoiding right now. The demons are not in the game. They never were.<br><br>— But now you know the pattern. And knowing is the first step out.'
+    : 'Ten days. Ten choices. A life reduced to a few decisions. But that is how it works, isn\'t it? Not in grand gestures, but in the small surrenders. This game is a mirror. <strong>What you did here, you do out there.</strong> The difference is: here, you saw the numbers change. Out there, the changes are invisible. Until one day, you look around and wonder how you got so far from yourself.';
+
+  // Play again
+  $('play-again-btn').onclick = () => {
+    $('end-screen').classList.add('hidden');
+    $('title-screen').classList.remove('hidden');
+    // Reset selection
+    document.querySelectorAll('.sel-btn').forEach(b => b.classList.remove('active'));
+    selectedAge = null;
+    selectedGender = null;
+    const begin = $('begin-btn');
+    begin.classList.remove('enabled');
+    begin.disabled = true;
+    window['_tr3'] = false;
+    window['_tr7'] = false;
+    window['_tr10'] = false;
+    $('truth-panel').style.display = 'none';
+  };
+}
+
+// ══════════════════════════════════════════════════════════
+// INITIALIZATION
+// ══════════════════════════════════════════════════════════
+
+console.log('"The veil is thin. Look closer."');
+</script>
+</body>
+</html>

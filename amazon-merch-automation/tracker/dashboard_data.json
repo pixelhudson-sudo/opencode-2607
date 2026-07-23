@@ -1,0 +1,51 @@
+{
+  "generated_at": "2026-07-17T18:51:50.956272",
+  "sales_summary_30d": {
+    "total_orders": 1,
+    "total_units": 2,
+    "total_revenue": 39.98,
+    "total_royalty": 7.96
+  },
+  "sales_by_design": [
+    {
+      "design_id": "D001",
+      "style": "typography",
+      "concept": "Bold distressed text 'Caffeine & Chaos' with stethoscope graphic",
+      "estimated_ctr": "high",
+      "title": "Caffeine & Chaos Funny Nurse T-Shirt - RN Life Tee",
+      "price": 19.99,
+      "status": "draft",
+      "orders": 1,
+      "units_sold": 2,
+      "revenue": 39.98,
+      "royalty": 7.96
+    }
+  ],
+  "niche_performance": [
+    {
+      "niche": "Funny Nurse Life",
+      "verdict": "",
+      "score": 72,
+      "designs": 1,
+      "listings": 1,
+      "total_units": 2,
+      "total_royalty": 7.96
+    }
+  ],
+  "active_niches": [],
+  "draft_listings": [
+    {
+      "id": 1,
+      "design_id": "D001",
+      "asin": "",
+      "title": "Caffeine & Chaos Funny Nurse T-Shirt - RN Life Tee",
+      "bullets": "Premium ringspun cotton|Bold distressed design|Perfect gift for nurses",
+      "description": "The perfect tee for the nurse who runs on espresso and determination.",
+      "backend_terms": "funny nurse gift rn life hospital humor medical field night shift",
+      "price": 19.99,
+      "status": "draft",
+      "published_at": null,
+      "url": ""
+    }
+  ]
+}

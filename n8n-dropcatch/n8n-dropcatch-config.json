@@ -1,0 +1,26 @@
+{
+  "_comment": "Domain Drop-Catching Pipeline Configuration",
+
+  "registrar": "namecheap",
+  "marketplaces": ["sedo"],
+
+  "max_daily_registrations": 10,
+  "max_domain_price": 5000,
+  "budget_per_day": 100.00,
+  "api_timeout_seconds": 30,
+  "retry_attempts": 2,
+
+  "enable_ai_evaluation": false,
+  "ai_model": "gpt-3.5-turbo",
+  "ai_model_endpoint": "https://api.openai.com/v1/chat/completions",
+  "ai_api_key": "",
+
+  "registar_api_key": "your_namecheap_api_key",
+  "registar_api_secret": "",
+
+  "sedo_api_key": "your_sedo_api_key",
+  "afternic_api_key": "",
+
+  "moz_access_id": "",
+  "moz_secret_key": ""
+}

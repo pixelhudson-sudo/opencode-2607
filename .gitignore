@@ -1,0 +1,8 @@
+# secrets
+.env
+
+# loop logs
+loop.log
+
+# OS
+.DS_Store

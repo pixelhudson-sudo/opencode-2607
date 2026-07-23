@@ -1,0 +1,171 @@
+{
+  "name": "Review Engine — Client Bundle",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "job-complete",
+        "formTitle": "Job Complete — Send Review Request",
+        "formDescription": "Fill this in right after finishing a job. The customer gets the review text within a minute.",
+        "formFields": {
+          "values": [
+            { "fieldLabel": "Customer Name", "fieldType": "text", "requiredField": true },
+            { "fieldLabel": "Customer Phone (with country code, e.g. +15551234567)", "fieldType": "text", "requiredField": true },
+            { "fieldLabel": "Service Done (e.g. drain unclog, AC tune-up)", "fieldType": "text", "requiredField": true }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1",
+      "name": "Job Complete Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "c1", "name": "BUSINESS_NAME", "type": "string", "value": "CHANGE ME — e.g. Rivera Plumbing" },
+            { "id": "c2", "name": "GOOGLE_REVIEW_LINK", "type": "string", "value": "CHANGE ME — client's Google review short link" },
+            { "id": "c3", "name": "TWILIO_FROM", "type": "string", "value": "+15550001111" },
+            { "id": "c4", "name": "TWILIO_ACCOUNT_SID", "type": "string", "value": "ACxxxxxxxxxxxxxxxx" },
+            { "id": "c5", "name": "MODEL", "type": "string", "value": "kimi-k3" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a2",
+      "name": "Set Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.moonshot.ai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"model\": $node[\"Set Config\"].json.MODEL, \"temperature\": 0.7, \"messages\": [ { \"role\": \"system\", \"content\": \"You write review-request SMS messages for a local business. Rules: under 300 characters, warm and human, thank the customer by first name, mention the specific service, include the review link exactly as given, end with 'Reply STOP to opt out.' Never sound corporate. At most one emoji. Output ONLY the SMS text.\" }, { \"role\": \"user\", \"content\": \"Business: \" + $node[\"Set Config\"].json.BUSINESS_NAME + \"\\nCustomer first name: \" + String($node[\"Job Complete Form\"].json[\"Customer Name\"]).split(\" \")[0] + \"\\nService done: \" + $node[\"Job Complete Form\"].json[\"Service Done (e.g. drain unclog, AC tune-up)\"] + \"\\nReview link: \" + $node[\"Set Config\"].json.GOOGLE_REVIEW_LINK } ] }) }}",
+        "options": {}
+      },
+      "id": "a3",
+      "name": "Write Review SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Moonshot API" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.item.json;\nconst text = r.choices?.[0]?.message?.content?.trim() || \"\";\nif (!text) throw new Error(\"Moonshot returned no text\");\nreturn { json: { sms: text.replace(/^\"|\"$/g, \"\") } };"
+      },
+      "id": "a4",
+      "name": "Extract SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $node[\"Set Config\"].json.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To", "value": "={{ $node[\"Job Complete Form\"].json[\"Customer Phone (with country code, e.g. +15551234567)\"] }}" },
+            { "name": "From", "value": "={{ $node[\"Set Config\"].json.TWILIO_FROM }}" },
+            { "name": "Body", "value": "={{ $node[\"Extract SMS\"].json.sms }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a5",
+      "name": "Send SMS 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 300],
+      "credentials": { "httpBasicAuth": { "id": "", "name": "Twilio API" } }
+    },
+    {
+      "parameters": { "amount": 48, "unit": "hours" },
+      "id": "a6",
+      "name": "Wait 48 Hours",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.moonshot.ai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"model\": $node[\"Set Config\"].json.MODEL, \"temperature\": 0.7, \"messages\": [ { \"role\": \"system\", \"content\": \"You write one gentle follow-up SMS asking for a Google review, 2 days after the first ask. Under 240 characters. Grateful, zero pressure, include the review link exactly, end with 'Reply STOP to opt out.' Output ONLY the SMS text.\" }, { \"role\": \"user\", \"content\": \"Business: \" + $node[\"Set Config\"].json.BUSINESS_NAME + \"\\nCustomer first name: \" + String($node[\"Job Complete Form\"].json[\"Customer Name\"]).split(\" \")[0] + \"\\nService done: \" + $node[\"Job Complete Form\"].json[\"Service Done (e.g. drain unclog, AC tune-up)\"] + \"\\nReview link: \" + $node[\"Set Config\"].json.GOOGLE_REVIEW_LINK } ] }) }}",
+        "options": {}
+      },
+      "id": "a7",
+      "name": "Write Follow Up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 300],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Moonshot API" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.item.json;\nconst text = r.choices?.[0]?.message?.content?.trim() || \"\";\nif (!text) throw new Error(\"Moonshot returned no text\");\nreturn { json: { sms: text.replace(/^\"|\"$/g, \"\") } };"
+      },
+      "id": "a8",
+      "name": "Extract Follow Up",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $node[\"Set Config\"].json.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To", "value": "={{ $node[\"Job Complete Form\"].json[\"Customer Phone (with country code, e.g. +15551234567)\"] }}" },
+            { "name": "From", "value": "={{ $node[\"Set Config\"].json.TWILIO_FROM }}" },
+            { "name": "Body", "value": "={{ $node[\"Extract Follow Up\"].json.sms }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a9",
+      "name": "Send SMS 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1760, 300],
+      "credentials": { "httpBasicAuth": { "id": "", "name": "Twilio API" } }
+    }
+  ],
+  "connections": {
+    "Job Complete Form": { "main": [[{ "node": "Set Config", "type": "main", "index": 0 }]] },
+    "Set Config": { "main": [[{ "node": "Write Review SMS", "type": "main", "index": 0 }]] },
+    "Write Review SMS": { "main": [[{ "node": "Extract SMS", "type": "main", "index": 0 }]] },
+    "Extract SMS": { "main": [[{ "node": "Send SMS 1", "type": "main", "index": 0 }]] },
+    "Send SMS 1": { "main": [[{ "node": "Wait 48 Hours", "type": "main", "index": 0 }]] },
+    "Wait 48 Hours": { "main": [[{ "node": "Write Follow Up", "type": "main", "index": 0 }]] },
+    "Write Follow Up": { "main": [[{ "node": "Extract Follow Up", "type": "main", "index": 0 }]] },
+    "Extract Follow Up": { "main": [[{ "node": "Send SMS 2", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "pinData": {}
+}

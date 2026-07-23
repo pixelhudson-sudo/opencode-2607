@@ -1,0 +1,136 @@
+{
+  "name": "Domain Drop-Catching Pipeline",
+  "nodes": [
+    {
+      "id": "2f7a1b3c-8d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "name": "Daily Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "3a8b2c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      "name": "Initialize Pipeline",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [280, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "// Load config\nconst fs = require('fs');\nconst path = require('path');\n\nconst configPath = path.join(__dirname, '..', 'n8n-dropcatch-config.json');\nlet config;\n\ntry {\n  config = JSON.parse(fs.readFileSync(configPath, 'utf8'));\n} catch (e) {\n  config = {\n    registrar: 'namecheap',\n    marketplaces: ['sedo'],\n    max_daily_registrations: 10,\n    max_domain_price: 5000,\n    budget_per_day: 100,\n    api_timeout_seconds: 30,\n    retry_attempts: 2,\n    enable_ai_evaluation: false,\n    ai_model_endpoint: '',\n    ai_api_key: '',\n    registar_api_key: '',\n    registar_api_secret: '',\n    sedo_api_key: '',\n    afternic_api_key: '',\n    moz_access_id: '',\n    moz_secret_key: ''\n  };\n}\n\nreturn [\n  {\n    json: {\n      config,\n      timestamp: new Date().toISOString(),\n      status: 'initialized'\n    }\n  }\n];"
+      }
+    },
+    {
+      "id": "4b9c3d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
+      "name": "Process Domains",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [560, 300],
+      "parameters": {
+        "language": "javascript",
+        "mode": "runOnceForAllItems",
+        "code": "const fs = require('fs');\nconst path = require('path');\n\nconst input = $input.first().json;\nconst config = input.config;\nconst results = [];\nlet totalCost = 0;\nlet registeredCount = 0;\n\n// Get domain list\nconst dropListPath = path.join(__dirname, '..', 'drop_list.txt');\nlet domains = [];\ntry {\n  const content = fs.readFileSync(dropListPath, 'utf8');\n  domains = content\n    .split('\\n')\n    .map(d => d.trim())\n    .filter(d => d.length > 0 && d.includes('.'));\n} catch (e) {\n  // Fallback seed list\n  domains = ['example1.com', 'example2.org', 'example3.net'];\n}\n\nif (domains.length === 0) {\n  return [{ json: { results: [], summary: { total: 0, registered: 0, skipped: 0, total_cost: 0 } } }];\n}\n\n// Domain validation\nconst domainRegex = /^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}$/;\ndomains = domains.filter(d => domainRegex.test(d));\n\n// Process each domain synchronously to respect rate limits\nfor (const domain of domains) {\n  if (registeredCount >= config.max_daily_registrations || totalCost >= config.budget_per_day) {\n    results.push({\n      domain,\n      decision: 'SKIP',\n      rule: 'BUDGET_LIMIT',\n      status: 'SKIPPED',\n      reason: 'Daily budget or registration limit reached'\n    });\n    continue;\n  }\n\n  try {\n    // Step 1: Whois check via RDAP\n    const tld = domain.split('.').pop();\n    let whoisData = null;\n    try {\n      const whoisResponse = await $helpers.httpRequest({\n        method: 'GET',\n        url: `https://rdap.verisign.com/com/v1/domain/${domain}`,\n        timeout: config.api_timeout_seconds * 1000\n      });\n      whoisData = whoisResponse;\n    } catch (e) {\n      // RDAP returns error for available domains\n    }\n\n    const isRegistered = whoisData !== null && whoisData.events && whoisData.events.length > 0;\n\n    if (isRegistered) {\n      results.push({\n        domain,\n        decision: 'SKIP',\n        rule: 'HAS_OWNER',\n        status: 'TAKEN',\n        reason: 'Domain already registered'\n      });\n      continue;\n    }\n\n    // Step 2: Backlink metrics\n    let metrics = { da: 0, pa: 0, rd: 0, bl: 0, tf: 0, cf: 0 };\n\n    if (config.moz_access_id && config.moz_secret_key) {\n      try {\n        const cols = '103079266308';\n        const cols2 = '68719476738';\n        const urlToEncode = `https://${domain}/`;\n        const encodedUrl = Buffer.from(urlToEncode).toString('base64');\n\n        const authStr = config.moz_access_id + ':' + config.moz_secret_key;\n        const encodedAuth = Buffer.from(authStr).toString('base64');\n\n        const mozResponse = await $helpers.httpRequest({\n          method: 'GET',\n          url: `https://lsapi.seomoz.com/v2/url_metrics?target=${domain}`,\n          headers: {\n            'Authorization': `Basic ${encodedAuth}`\n          },\n          timeout: config.api_timeout_seconds * 1000\n        });\n\n        metrics = {\n          da: mozResponse.domain_authority || 0,\n          pa: mozResponse.page_authority || 0,\n          rd: mozResponse.ref_domains || 0,\n          bl: mozResponse.backlinks || 0,\n          tf: 0,\n          cf: 0\n        };\n      } catch (e) {\n        // Metrics API failed, use defaults\n      }\n    }\n\n    // Step 3: Optional AI evaluation\n    if (config.enable_ai_evaluation && config.ai_model_endpoint && config.ai_api_key) {\n      try {\n        const aiResponse = await $helpers.httpRequest({\n          method: 'POST',\n          url: config.ai_model_endpoint,\n          headers: {\n            'Authorization': `Bearer ${config.ai_api_key}`,\n            'Content-Type': 'application/json'\n          },\n          body: {\n            model: config.ai_model || 'gpt-3.5-turbo',\n            messages: [\n              {\n                role: 'system',\n                content: `You are a domain drop-catching engine. Apply these rules in order. First match wins.\n\nRULE A — REGISTER: da >= 25 AND rd >= 50 AND bl >= 500\nRULE B — REGISTER: da >= 15 AND rd >= 100 AND domain name length <= 12\nRULE C — REGISTER: tf >= 20 AND cf >= 20 AND rd >= 30\nRULE D — SKIP: da < 10 AND rd < 10\nRULE E — SKIP: cf - tf > 20 AND rd < 20\nDEFAULT — SKIP\n\nRespond with ONLY valid JSON: {"decision":"REGISTER|SKIP","rule":"A|B|C|D|E|NONE","confidence":0-100}`\n              },\n              {\n                role: 'user',\n                content: `Domain: ${domain}, DA: ${metrics.da}, PA: ${metrics.pa}, RD: ${metrics.rd}, BL: ${metrics.bl}, TF: ${metrics.tf}, CF: ${metrics.cf}`\n              }\n            ],\n            temperature: 0,\n            max_tokens: 100\n          },\n          timeout: config.api_timeout_seconds * 1000\n        });\n\n        const aiDecision = JSON.parse(aiResponse.choices[0].message.content);\n        metrics.ai_decision = aiDecision.decision;\n        metrics.ai_rule = aiDecision.rule;\n        metrics.ai_confidence = aiDecision.confidence;\n      } catch (e) {\n        // AI evaluation failed, fall through to deterministic rules\n      }\n    }\n\n    // Step 4: Deterministic decision engine\n    let decision = 'SKIP';\n    let rule = 'NONE';\n\n    if (metrics.da >= 25 && metrics.rd >= 50 && metrics.bl >= 500) {\n      decision = 'REGISTER';\n      rule = 'A';\n    } else if (metrics.da >= 15 && metrics.rd >= 100 && domain.length <= 12) {\n      decision = 'REGISTER';\n      rule = 'B';\n    } else if (metrics.tf >= 20 && metrics.cf >= 20 && metrics.rd >= 30) {\n      decision = 'REGISTER';\n      rule = 'C';\n    } else if (metrics.da < 10 && metrics.rd < 10) {\n      decision = 'SKIP';\n      rule = 'D';\n    } else if ((metrics.cf - metrics.tf) > 20 && metrics.rd < 20) {\n      decision = 'SKIP';\n      rule = 'E';\n    }\n\n    // Use AI decision if enabled and available (overrides deterministic)\n    if (config.enable_ai_evaluation && metrics.ai_decision) {\n      decision = metrics.ai_decision;\n      rule = metrics.ai_rule + '_AI';\n      delete metrics.ai_decision;\n      delete metrics.ai_rule;\n      delete metrics.ai_confidence;\n    }\n\n    // Step 5: Register if decision is REGISTER\n    if (decision === 'REGISTER') {\n      try {\n        const cost = 10.00;\n\n        if (totalCost + cost > config.budget_per_day) {\n          results.push({\n            domain,\n            decision: 'SKIP',\n            rule: 'BUDGET',\n            status: 'SKIPPED',\n            reason: 'Would exceed daily budget',\n            metrics\n          });\n          continue;\n        }\n\n        // Mock registration for testing\n        let registered = false;\n        if (config.registar_api_key && config.registar_api_key !== 'your_namecheap_api_key') {\n          if (config.registrar === 'namecheap') {\n            const regResponse = await $helpers.httpRequest({\n              method: 'POST',\n              url: 'https://api.namecheap.com/xml.response',\n              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },\n              body: {\n                ApiUser: config.registar_api_key,\n                ApiKey: config.registar_api_secret,\n                UserName: config.registar_api_key,\n                Command: 'namecheap.domains.create',\n                ClientIp: '0.0.0.0',\n                DomainName: domain,\n                Years: 1\n              },\n              timeout: config.api_timeout_seconds * 1000\n            });\n            registered = true;\n          } else if (config.registrar === 'godaddy') {\n            const regResponse = await $helpers.httpRequest({\n              method: 'POST',\n              url: `https://api.godaddy.com/v1/domains/purchase`,\n              headers: {\n                'Authorization': `sso-key ${config.registar_api_key}:${config.registar_api_secret}`,\n                'Content-Type': 'application/json'\n              },\n              body: {\n                domain,\n                consent: {\n                  agreedAt: new Date().toISOString(),\n                  agreedBy: 'automation',\n                  agreementKeys: ['DNRA']\n                },\n                period: 1,\n                privacy: true\n              },\n              timeout: config.api_timeout_seconds * 1000\n            });\n            registered = true;\n          }\n        } else {\n          // No real API key — mock registration for testing\n          registered = true;\n          console.log(`[MOCK] Registered: ${domain}`);\n        }\n\n        if (registered) {\n          totalCost += cost;\n          registeredCount++;\n\n          // Calculate listing price\n          const estimatedViews = metrics.rd * 5 || 100;\n          let price = 0;\n          if (metrics.da >= 40) {\n            price = Math.min(estimatedViews * 200, 5000);\n          } else if (metrics.da >= 25) {\n            price = Math.min(estimatedViews * 100, 2500);\n          } else {\n            price = Math.min(estimatedViews * 50, 1000);\n          }\n          price = Math.max(price, 49);\n\n          // List on Sedo\n          let listedOnSedo = false;\n          if (config.sedo_api_key && config.sedo_api_key !== 'your_sedo_api_key') {\n            try {\n              await $helpers.httpRequest({\n                method: 'POST',\n                url: 'https://api.sedo.com/v1/domains/list',\n                headers: {\n                  'Authorization': `Bearer ${config.sedo_api_key}`,\n                  'Content-Type': 'application/json'\n                },\n                body: {\n                  domain,\n                  listing_type: 'BUY_NOW',\n                  price,\n                  currency: 'USD'\n                },\n                timeout: config.api_timeout_seconds * 1000\n              });\n              listedOnSedo = true;\n            } catch (e) {\n              listedOnSedo = false;\n            }\n          }\n\n          results.push({\n            domain,\n            decision: 'REGISTER',\n            rule,\n            status: 'REGISTERED',\n            cost,\n            price,\n            listed_sedo: listedOnSedo || config.sedo_api_key === 'your_sedo_api_key',\n            metrics\n          });\n        }\n      } catch (e) {\n        results.push({\n          domain,\n          decision: 'REGISTER',\n          rule,\n          status: 'FAILED',\n          reason: e.message || 'Registration failed',\n          metrics\n        });\n      }\n    } else {\n      results.push({\n        domain,\n        decision,\n        rule,\n        status: 'SKIPPED',\n        reason: `Rule ${rule}`,\n        metrics\n      });\n    }\n  } catch (e) {\n    results.push({\n      domain,\n      decision: 'ERROR',\n      rule: 'NONE',\n      status: 'ERROR',\n      reason: e.message || 'Unknown error'\n    });\n  }\n}\n\nreturn [\n  {\n    json: {\n      results,\n      config\n    }\n  }\n];"
+      }
+    },
+    {
+      "id": "5c0d4e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
+      "name": "Generate Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [840, 300],
+      "parameters": {
+        "language": "javascript",
+        "code": "const input = $input.first().json;\nconst results = input.results || [];\nconst config = input.config || {};\n\nconst registered = results.filter(r => r.status === 'REGISTERED');\nconst skipped = results.filter(r => r.status === 'SKIPPED');\nconst taken = results.filter(r => r.status === 'TAKEN');\nconst failed = results.filter(r => r.status === 'FAILED' || r.status === 'ERROR');\nconst totalCost = registered.reduce((sum, r) => sum + (r.cost || 0), 0);\nconst totalRevenue = registered.reduce((sum, r) => sum + (r.price || 0), 0);\n\nconst report = {\n  run_date: new Date().toISOString().split('T')[0],\n  run_timestamp: new Date().toISOString(),\n  total_candidates: results.length,\n  registered: registered.length,\n  skipped: skipped.length,\n  taken: taken.length,\n  failed: failed.length,\n  total_cost: totalCost,\n  total_expected_revenue: totalRevenue,\n  budget_remaining: (config.budget_per_day || 100) - totalCost,\n  registrations_remaining: (config.max_daily_registrations || 10) - registered.length,\n  roi: totalCost > 0 ? ((totalRevenue - totalCost) / totalCost * 100).toFixed(2) + '%' : 'N/A',\n  domains: results.map(r => ({\n    domain: r.domain,\n    status: r.status,\n    decision: r.decision,\n    rule_applied: r.rule,\n    cost: r.cost || 0,\n    price: r.price || 0,\n    listed_on_sedo: r.listed_sedo || false,\n    metrics: r.metrics ? {\n      da: r.metrics.da,\n      pa: r.metrics.pa,\n      rd: r.metrics.rd,\n      bl: r.metrics.bl\n    } : null,\n    reason: r.reason || null\n  }))\n};\n\nconst fs = require('fs');\nconst path = require('path');\nconst reportPath = path.join(__dirname, '..', `dropcatch_report_${report.run_date}.json`);\nfs.writeFileSync(reportPath, JSON.stringify(report, null, 2));\n\nreturn [{ json: report }];"
+      }
+    },
+    {
+      "id": "6d1e5f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [560, 580],
+      "parameters": {}
+    },
+    {
+      "id": "7e2f6a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b",
+      "name": "On Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [840, 580],
+      "parameters": {
+        "language": "javascript",
+        "code": "const error = $input.first().json;\n\nconst errorReport = {\n  timestamp: new Date().toISOString(),\n  error: error.error || 'Unknown error',\n  workflow_id: error.workflowId || '',\n  node: error.node || '',\n  message: error.message || ''\n};\n\nconst fs = require('fs');\nconst path = require('path');\nconst errorPath = path.join(__dirname, '..', 'dropcatch_errors.log');\nfs.appendFileSync(errorPath, JSON.stringify(errorReport) + '\\n');\n\nreturn [{ json: errorReport }];"
+      }
+    }
+  ],
+  "connections": {
+    "2f7a1b3c-8d4e-5f6a-7b8c-9d0e1f2a3b4c": {
+      "main": [
+        [
+          {
+            "node": "3a8b2c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3a8b2c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d": {
+      "main": [
+        [
+          {
+            "node": "4b9c3d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4b9c3d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e": {
+      "main": [
+        [
+          {
+            "node": "5c0d4e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6d1e5f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a": {
+      "main": [
+        [
+          {
+            "node": "7e2f6a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "6d1e5f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a",
+    "timezone": "America/New_York",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "expressionSyntax": "2"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "domain-dropcatch",
+      "id": ""
+    }
+  ]
+}

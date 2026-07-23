@@ -1,0 +1,5 @@
+# Domain Drop List — one domain per line
+# Lines starting with # are ignored
+expiringdomain1.com
+expiringdomain2.org
+expiringdomain3.net

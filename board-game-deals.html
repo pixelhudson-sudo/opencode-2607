@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Best Board & Card Game Deals 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f0f10;
+  color: #ffffff;
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+/* Hero */
+.hero {
+  padding: 80px 0 60px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(217,119,87,0.08) 0%, transparent 100%);
+}
+.hero h1 {
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  margin-bottom: 16px;
+}
+.hero h1 span { color: #D97757; }
+.hero p {
+  font-size: 18px;
+  color: #a0a0a0;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 48px;
+}
+.filter-btn {
+  background: #1a1a1d;
+  border: 1px solid #2a2a2d;
+  color: #a0a0a0;
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.filter-btn:hover { border-color: #D97757; color: #fff; }
+.filter-btn.active { background: rgba(217,119,87,0.15); border-color: #D97757; color: #D97757; }
+
+/* Game grid */
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  padding-bottom: 80px;
+}
+.game-card {
+  background: #1a1a1d;
+  border: 1px solid #2a2a2d;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.game-card:hover { border-color: #D97757; transform: translateY(-2px); }
+.game-card-inner { padding: 24px; }
+
+.game-card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.game-card .category-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+.tag-board { background: rgba(217,119,87,0.15); color: #D97757; }
+.tag-card { background: rgba(99,179,237,0.15); color: #63B3ED; }
+.tag-coop { background: rgba(154,230,180,0.15); color: #9AE6B4; }
+
+.game-card .meta {
+  color: #a0a0a0;
+  font-size: 13px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.game-card .meta span { display: flex; align-items: center; gap: 4px; }
+
+/* Price row */
+.price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.price-best {
+  font-size: 28px;
+  font-weight: 800;
+  color: #D97757;
+}
+.price-current {
+  font-size: 16px;
+  color: #a0a0a0;
+  text-decoration: line-through;
+}
+.price-save {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(217,119,87,0.15);
+  color: #D97757;
+}
+.price-alltime {
+  font-size: 13px;
+  color: #71717a;
+}
+
+/* Buttons */
+.btn-group { display: flex; gap: 8px; margin-bottom: 16px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  flex: 1;
+}
+.btn-amazon {
+  background: rgba(217,119,87,0.15);
+  color: #D97757;
+  border: 1px solid rgba(217,119,87,0.3);
+}
+.btn-amazon:hover { background: #D97757; color: #fff; }
+.btn-youtube {
+  background: rgba(255,77,77,0.12);
+  color: #ff4d4d;
+  border: 1px solid rgba(255,77,77,0.25);
+}
+.btn-youtube:hover { background: #ff4d4d; color: #fff; }
+
+/* Learn more link */
+.learn-more {
+  font-size: 13px;
+  color: #71717a;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+}
+.learn-more:hover { color: #D97757; }
+
+/* Savings tips section */
+.savings-section {
+  background: #1a1a1d;
+  border: 1px solid #2a2a2d;
+  border-radius: 12px;
+  padding: 40px;
+  margin-bottom: 60px;
+}
+.savings-section h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+.savings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+.savings-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.savings-item .icon { font-size: 24px; flex-shrink: 0; }
+.savings-item h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.savings-item p { font-size: 13px; color: #a0a0a0; line-height: 1.4; }
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 40px 0 60px;
+  color: #71717a;
+  font-size: 13px;
+  border-top: 1px solid #2a2a2d;
+}
+.footer a { color: #D97757; text-decoration: none; }
+
+/* Hide/show by filter */
+.game-card.hidden { display: none; }
+
+/* Responsive */
+@media (max-width: 700px) {
+  .hero h1 { font-size: 32px; }
+  .hero { padding: 48px 0 36px; }
+  .game-grid { grid-template-columns: 1fr; }
+  .savings-section { padding: 24px; }
+  .price-best { font-size: 24px; }
+}
+
+/* Deal meter */
+.deal-meter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.deal-meter-bar {
+  flex: 1;
+  height: 6px;
+  background: #2a2a2d;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.deal-meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s;
+}
+.deal-meter-fill.hot { background: #D97757; }
+.deal-meter-fill.warm { background: #F6AD55; }
+.deal-meter-fill.cool { background: #63B3ED; }
+.deal-meter-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #a0a0a0;
+  width: 40px;
+  text-align: right;
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="container">
+    <h1>Game Night <span>Deal Finder</span></h1>
+    <p>Best prices from the past year across 16 top-rated board & card games — with Amazon links and quick-teach videos.</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">All Games</button>
+    <button class="filter-btn" data-filter="board">Board Games</button>
+    <button class="filter-btn" data-filter="card">Card Games</button>
+    <button class="filter-btn" data-filter="coop">Co-op & Family</button>
+  </div>
+
+  <div class="game-grid" id="gameGrid">
+
+    <!-- Ticket to Ride -->
+    <div class="game-card" data-category="board">
+      <div class="game-card-inner">
+        <span class="category-tag tag-board">Board Game</span>
+        <h2>Ticket to Ride</h2>
+        <div class="meta">
+          <span>👥 2-5</span>
+          <span>🎂 8+</span>
+          <span>⏱ 30-60m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill cool" style="width: 45%"></div></div>
+          <span class="deal-meter-label">OK deal</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$24.99</span>
+          <span class="price-current">$35</span>
+          <span class="price-save">−29%</span>
+          <span class="price-alltime">All-time low: $17</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">Best deal: Jul 2025 Prime Day</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/Asmodee-Ticket-Ride-Board-Refresh/dp/B0F8PKN4B7" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=GOnv_ijFSEM" target="_blank">▶ Learn to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/9209/ticket-ride" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+    <!-- Carcassonne -->
+    <div class="game-card" data-category="board">
+      <div class="game-card-inner">
+        <span class="category-tag tag-board">Board Game</span>
+        <h2>Carcassonne</h2>
+        <div class="meta">
+          <span>👥 2-5</span>
+          <span>🎂 7+</span>
+          <span>⏱ 35m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill warm" style="width: 70%"></div></div>
+          <span class="deal-meter-label">Great deal</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$20.15</span>
+          <span class="price-current">$31</span>
+          <span class="price-save">−35%</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">Best deal: Jul 2025 ($20.15)</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/Asmodee-Carcassonne-Board-Game-Tile-Laying/dp/B00NX627HW" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=R1qh-lhxy9s" target="_blank">▶ Learn to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/822/carcassonne" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+    <!-- Azul -->
+    <div class="game-card" data-category="board">
+      <div class="game-card-inner">
+        <span class="category-tag tag-board">Board Game</span>
+        <h2>Azul</h2>
+        <div class="meta">
+          <span>👥 2-4</span>
+          <span>🎂 8+</span>
+          <span>⏱ 30-45m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill warm" style="width: 65%"></div></div>
+          <span class="deal-meter-label">Great deal</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$21.49</span>
+          <span class="price-current">$36</span>
+          <span class="price-save">−40%</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">Best deal: Nov 2025; also $23.99 at Prime Day 2026</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/Next-Move-Games-Azul-Strategy/dp/B077MZ2MPW" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=193R2h2M3Yk" target="_blank">▶ Learn to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/230802/azul" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+    <!-- Kingdomino -->
+    <div class="game-card" data-category="board">
+      <div class="game-card-inner">
+        <span class="category-tag tag-board">Board Game</span>
+        <h2>Kingdomino</h2>
+        <div class="meta">
+          <span>👥 2-4</span>
+          <span>🎂 8+</span>
+          <span>⏱ 15-20m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill hot" style="width: 85%"></div></div>
+          <span class="deal-meter-label">Steal!</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$15</span>
+          <span class="price-current">$20</span>
+          <span class="price-save">−25%</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">Consistently low price — rarely goes above $20</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/Blue-Orange-Games-Kingdomino/dp/B01N3A4070" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=8DxWR-nqtBk" target="_blank">▶ Learn to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/204583/kingdomino" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+    <!-- Qwirkle -->
+    <div class="game-card" data-category="board">
+      <div class="game-card-inner">
+        <span class="category-tag tag-board">Board Game</span>
+        <h2>Qwirkle</h2>
+        <div class="meta">
+          <span>👥 2-4</span>
+          <span>🎂 6+</span>
+          <span>⏱ 45m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill cool" style="width: 50%"></div></div>
+          <span class="deal-meter-label">OK deal</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$11.34</span>
+          <span class="price-current">$25</span>
+          <span class="price-save">−55%</span>
+          <span class="price-alltime">All-time low</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">Watch for deep discounts — huge variance</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/dp/1933054395" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=F_MyMJD1GFA" target="_blank">▶ Learn to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/40849/qwirkle" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+    <!-- Blokus -->
+    <div class="game-card" data-category="board">
+      <div class="game-card-inner">
+        <span class="category-tag tag-board">Board Game</span>
+        <h2>Blokus</h2>
+        <div class="meta">
+          <span>👥 2-4</span>
+          <span>🎂 7+</span>
+          <span>⏱ 20-30m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill hot" style="width: 85%"></div></div>
+          <span class="deal-meter-label">Steal!</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$9.99</span>
+          <span class="price-current">$18</span>
+          <span class="price-save">−44%</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">Best deal: Nov 2025 — snag at $9.99 if it hits again</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/dp/B00FBWBM3G" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=0T0dPoCB2wA" target="_blank">▶ Learn to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/2453/blokus" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+    <!-- The Quacks of Quedlinburg -->
+    <div class="game-card" data-category="board">
+      <div class="game-card-inner">
+        <span class="category-tag tag-board">Board Game</span>
+        <h2>The Quacks of Quedlinburg</h2>
+        <div class="meta">
+          <span>👥 2-4</span>
+          <span>🎂 10+</span>
+          <span>⏱ 45m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill cool" style="width: 40%"></div></div>
+          <span class="deal-meter-label">Wait for sale</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$39.99</span>
+          <span class="price-current">MSRP</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">Now published as "Quacks" — relatively new edition, hasn't seen major sales yet</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/dp/B0F4SRMRG9" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=x5HUngcau5k" target="_blank">▶ Learn to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/244521/quacks-quedlinburg" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+    <!-- Sushi Go! -->
+    <div class="game-card" data-category="card">
+      <div class="game-card-inner">
+        <span class="category-tag tag-card">Card Game</span>
+        <h2>Sushi Go!</h2>
+        <div class="meta">
+          <span>👥 2-5</span>
+          <span>🎂 8+</span>
+          <span>⏱ 15m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill hot" style="width: 90%"></div></div>
+          <span class="deal-meter-label">Insane!</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$4.87</span>
+          <span class="price-current">$11</span>
+          <span class="price-save">−56%</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">Best deal: May 2026 — incredible low at $4.87</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/dp/B00J57VU44" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=ydpl8Nswmeo" target="_blank">▶ Learn to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/133473/sushi-go" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+    <!-- Splendor -->
+    <div class="game-card" data-category="card">
+      <div class="game-card-inner">
+        <span class="category-tag tag-card">Card Game</span>
+        <h2>Splendor</h2>
+        <div class="meta">
+          <span>👥 2-4</span>
+          <span>🎂 10+</span>
+          <span>⏱ 30m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill warm" style="width: 70%"></div></div>
+          <span class="deal-meter-label">Great deal</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$19.19</span>
+          <span class="price-current">$35</span>
+          <span class="price-save">−45%</span>
+          <span class="price-alltime">All-time low: $13</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">Best deal: Jul 2025 Prime Day; watch for $13 again</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/dp/B00IZEUFIA" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=oAwPsYNmFkM" target="_blank">▶ Learn to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/148228/splendor" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+    <!-- Jaipur -->
+    <div class="game-card" data-category="card">
+      <div class="game-card-inner">
+        <span class="category-tag tag-card">Card Game</span>
+        <h2>Jaipur</h2>
+        <div class="meta">
+          <span>👥 2</span>
+          <span>🎂 12+</span>
+          <span>⏱ 30m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill cool" style="width: 55%"></div></div>
+          <span class="deal-meter-label">OK deal</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$18</span>
+          <span class="price-current">$25</span>
+          <span class="price-save">−28%</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">International prices stronger; US ~$22-27 typical</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/dp/B0861RGY3K" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=RSj_xdweTww" target="_blank">▶ Learn to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/54043/jaipur" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+    <!-- Dragonwood -->
+    <div class="game-card" data-category="card">
+      <div class="game-card-inner">
+        <span class="category-tag tag-card">Card Game</span>
+        <h2>Dragonwood</h2>
+        <div class="meta">
+          <span>👥 2-4</span>
+          <span>🎂 8+</span>
+          <span>⏱ 20m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill warm" style="width: 75%"></div></div>
+          <span class="deal-meter-label">Great deal</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$11.93</span>
+          <span class="price-current">$15</span>
+          <span class="price-save">−20%</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">Consistently affordable; rarely spikes</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/dp/B00UB7OV7K" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=rVH9n5bO_nU" target="_blank">▶ Learn to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/147151/dragonwood" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+    <!-- Machi Koro -->
+    <div class="game-card" data-category="card">
+      <div class="game-card-inner">
+        <span class="category-tag tag-card">Card Game</span>
+        <h2>Machi Koro</h2>
+        <div class="meta">
+          <span>👥 2-5</span>
+          <span>🎂 10+</span>
+          <span>⏱ 30m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill cool" style="width: 40%"></div></div>
+          <span class="deal-meter-label">Wait for sale</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$29.95</span>
+          <span class="price-current">Current</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">Machi Koro 2 also available — compare editions</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/Pandasaurus-Games-Machi-Koro-Anniversary/dp/B07HKZ4BH6" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=ls_h-9gBG_E" target="_blank">▶ Learn to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/143884/machi-koro" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+    <!-- Forbidden Island -->
+    <div class="game-card" data-category="coop">
+      <div class="game-card-inner">
+        <span class="category-tag tag-coop">Co-op</span>
+        <h2>Forbidden Island</h2>
+        <div class="meta">
+          <span>👥 2-4</span>
+          <span>🎂 10+</span>
+          <span>⏱ 30m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill warm" style="width: 70%"></div></div>
+          <span class="deal-meter-label">Great deal</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$18</span>
+          <span class="price-current">$21</span>
+          <span class="price-save">−14%</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">Best deal: Prime Day 2026 (~$18)</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/dp/B003D7F4YY" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=TpiSZYrpP_I" target="_blank">▶ Learn to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/65244/forbidden-island" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+    <!-- Sequence / Sequence Dice -->
+    <div class="game-card" data-category="coop">
+      <div class="game-card-inner">
+        <span class="category-tag tag-coop">Family</span>
+        <h2>Sequence & Variants</h2>
+        <div class="meta">
+          <span>👥 2-12</span>
+          <span>🎂 7+</span>
+          <span>⏱ 30m</span>
+        </div>
+        <div class="deal-meter">
+          <div class="deal-meter-bar"><div class="deal-meter-fill warm" style="width: 65%"></div></div>
+          <span class="deal-meter-label">Great value</span>
+        </div>
+        <div class="price-row">
+          <span class="price-best">$16</span>
+          <span class="price-current">$20</span>
+          <span class="price-save">−20%</span>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-bottom:12px;">Sequence Dice ~$9, Numbers ~$12, Original ~$16-20</p>
+        <div class="btn-group">
+          <a class="btn btn-amazon" href="https://www.amazon.com/sequence-board-game/s?k=sequence+board+game" target="_blank">🛒 Amazon</a>
+          <a class="btn btn-youtube" href="https://www.youtube.com/watch?v=tJznQ80BBGE" target="_blank">▶ How to Play</a>
+        </div>
+        <a class="learn-more" href="https://boardgamegeek.com/boardgame/2375/sequence" target="_blank">View on BGG →</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Savings Tips -->
+  <div class="savings-section">
+    <h2>Tips to save more</h2>
+    <div class="savings-grid">
+      <div class="savings-item">
+        <span class="icon">📊</span>
+        <div>
+          <h3>Track with Keepa / CamelCamelCamel</h3>
+          <p>Set price alerts on Amazon. Most of these games hit their lows during Prime Day and Black Friday.</p>
+        </div>
+      </div>
+      <div class="savings-item">
+        <span class="icon">🏷️</span>
+        <div>
+          <h3>Watch for coupon ticks</h3>
+          <p>Amazon often applies hidden coupons on board games. Check the checkbox under the price before checking out.</p>
+        </div>
+      </div>
+      <div class="savings-item">
+        <span class="icon">🔄</span>
+        <div>
+          <h3>Buy used / like new</h3>
+          <p>Amazon Warehouse often has returns at 30-50% off. Board games are almost always complete — missing pieces are rare.</p>
+        </div>
+      </div>
+      <div class="savings-item">
+        <span class="icon">📦</span>
+        <div>
+          <h3>Bundle for free shipping</h3>
+          <p>Multiple games at $25+ each = easy free shipping threshold. Sushi Go + Dragonwood + Blokus = one order.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div class="container">
+    Prices checked Jul 2026. Game data from BoardGameGeek. Always verify current pricing on Amazon.
+  </div>
+</div>
+
+<script>
+const filterBtns = document.querySelectorAll('.filter-btn');
+const cards = document.querySelectorAll('.game-card');
+
+filterBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    filterBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filter = btn.dataset.filter;
+    cards.forEach(card => {
+      if (filter === 'all' || card.dataset.category === filter) {
+        card.classList.remove('hidden');
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+  });
+});
+</script>
+
+</body>
+</html>

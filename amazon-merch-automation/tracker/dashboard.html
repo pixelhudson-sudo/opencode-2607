@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merch Tracker — Amazon Merch Performance Dashboard</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card-bg: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e1e4ed;
+    --text-muted: #8b8fa3;
+    --green: #34d399;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --accent: #6366f1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 24px;
+  }
+  h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+  h2 { font-size: 1.1rem; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; }
+  h3 { font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 12px; }
+
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+  }
+  .header-right { text-align: right; }
+  .header-right .date { font-size: 0.8rem; color: var(--text-muted); }
+  .header-right button {
+    background: var(--accent); color: white; border: none; padding: 8px 16px;
+    border-radius: 6px; cursor: pointer; font-size: 0.85rem; margin-top: 8px;
+  }
+  .header-right button:hover { opacity: 0.85; }
+
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+  }
+  .kpi-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 6px; }
+  .kpi-card .value { font-size: 1.8rem; font-weight: 700; }
+  .kpi-card .sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+  .kpi-card.revenue .value { color: var(--green); }
+  .kpi-card.orders .value { color: var(--blue); }
+  .kpi-card.units .value { color: var(--purple); }
+  .kpi-card.royalty .value { color: var(--yellow); }
+
+  .section {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; margin-bottom: 16px;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th {
+    text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border);
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);
+    font-weight: 600;
+  }
+  td { padding: 10px 8px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+  }
+  .badge-published { background: rgba(52,211,153,0.15); color: var(--green); }
+  .badge-draft { background: rgba(251,191,36,0.15); color: var(--yellow); }
+  .badge-enter { background: rgba(52,211,153,0.15); color: var(--green); }
+  .badge-watch { background: rgba(251,191,36,0.15); color: var(--yellow); }
+  .badge-skip { background: rgba(248,113,113,0.15); color: var(--red); }
+  .badge-high { background: rgba(52,211,153,0.15); color: var(--green); }
+  .badge-medium { background: rgba(251,191,36,0.15); color: var(--yellow); }
+  .badge-low { background: rgba(248,113,113,0.15); color: var(--red); }
+
+  .progress-bar {
+    height: 6px; background: var(--border); border-radius: 3px; margin-top: 4px; overflow: hidden;
+  }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+
+  .empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.9rem; }
+
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 16px; }
+  .tab {
+    padding: 8px 16px; border-radius: 6px; cursor: pointer;
+    font-size: 0.85rem; color: var(--text-muted); background: transparent;
+    border: 1px solid transparent; transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .tab.active { color: var(--text); background: var(--accent); border-color: var(--accent); }
+
+  .input-file { display: none; }
+
+  @media (max-width: 768px) {
+    body { padding: 12px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    th, td { padding: 6px 4px; font-size: 0.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Merch Tracker</h1>
+    <h2>Amazon Merch on Demand &mdash; Performance Dashboard</h2>
+  </div>
+  <div class="header-right">
+    <div class="date" id="lastUpdated">No data loaded</div>
+    <button onclick="document.getElementById('fileInput').click()">Load JSON</button>
+    <input type="file" id="fileInput" class="input-file" accept=".json" onchange="loadFile(event)">
+  </div>
+</div>
+
+<div class="tab-bar" id="tabBar" style="display:none">
+  <div class="tab active" onclick="switchTab('overview')">Overview</div>
+  <div class="tab" onclick="switchTab('designs')">Designs</div>
+  <div class="tab" onclick="switchTab('niches')">Niches</div>
+  <div class="tab" onclick="switchTab('drafts')">Drafts</div>
+</div>
+
+<div id="tab-overview"></div>
+<div id="tab-designs" style="display:none"></div>
+<div id="tab-niches" style="display:none"></div>
+<div id="tab-drafts" style="display:none"></div>
+
+<script>
+let data = null;
+
+function loadFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      data = JSON.parse(e.target.result);
+      document.getElementById('lastUpdated').textContent =
+        'Updated: ' + new Date(data.generated_at).toLocaleString();
+      document.getElementById('tabBar').style.display = 'flex';
+      switchTab('overview');
+    } catch (err) {
+      alert('Invalid JSON file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('#tabBar .tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`#tabBar .tab:nth-child(${
+    ['overview','designs','niches','drafts'].indexOf(tab)+1
+  })`).classList.add('active');
+
+  ['overview','designs','niches','drafts'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t === tab ? 'block' : 'none';
+  });
+
+  if (tab === 'overview') renderOverview();
+  if (tab === 'designs') renderDesigns();
+  if (tab === 'niches') renderNiches();
+  if (tab === 'drafts') renderDrafts();
+}
+
+function renderOverview() {
+  const s = data.sales_summary_30d || {};
+  const container = document.getElementById('tab-overview');
+  container.innerHTML = `
+    <div class="kpi-grid">
+      <div class="kpi-card orders">
+        <div class="label">Total Orders</div>
+        <div class="value">${s.total_orders || 0}</div>
+        <div class="sub">Last 30 days</div>
+      </div>
+      <div class="kpi-card units">
+        <div class="label">Units Sold</div>
+        <div class="value">${s.total_units || 0}</div>
+        <div class="sub">Last 30 days</div>
+      </div>
+      <div class="kpi-card revenue">
+        <div class="label">Total Revenue</div>
+        <div class="value">$${(s.total_revenue || 0).toFixed(2)}</div>
+        <div class="sub">Last 30 days</div>
+      </div>
+      <div class="kpi-card royalty">
+        <div class="label">Your Royalty</div>
+        <div class="value">$${(s.total_royalty || 0).toFixed(2)}</div>
+        <div class="sub">Last 30 days</div>
+      </div>
+    </div>
+    <div class="section">
+      <h3>Top Performing Designs</h3>
+      ${renderTopDesigns()}
+    </div>
+  `;
+}
+
+function renderTopDesigns() {
+  const designs = (data.sales_by_design || []).filter(d => d.units_sold > 0);
+  if (!designs.length) return '<div class="empty">No sales yet. Launch your first designs!</div>';
+
+  return `
+    <table>
+      <thead><tr>
+        <th>Design ID</th><th>Title</th><th>Price</th>
+        <th>Style</th><th>CTR Est</th><th>Units</th><th>Revenue</th><th>Royalty</th>
+      </tr></thead>
+      <tbody>
+        ${designs.map(d => `
+          <tr>
+            <td><strong>${d.design_id || '-'}</strong></td>
+            <td>${(d.title || '-').substring(0, 50)}</td>
+            <td>$${(d.price || 0).toFixed(2)}</td>
+            <td>${d.style || '-'}</td>
+            <td><span class="badge badge-${(d.estimated_ctr || 'low').toLowerCase()}">${d.estimated_ctr || '-'}</span></td>
+            <td>${d.units_sold || 0}</td>
+            <td>$${(d.revenue || 0).toFixed(2)}</td>
+            <td style="color:var(--green)">$${(d.royalty || 0).toFixed(2)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderDesigns() {
+  const designs = data.sales_by_design || [];
+  const container = document.getElementById('tab-designs');
+
+  if (!designs.length) {
+    container.innerHTML = '<div class="section"><div class="empty">No designs yet. Run the pipeline to generate designs.</div></div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="section">
+      <h3>All Designs (${designs.length})</h3>
+      <table>
+        <thead><tr>
+          <th>ID</th><th>Style</th><th>Title</th><th>Status</th>
+          <th>CTR</th><th>Units</th><th>Revenue</th><th>Royalty</th>
+        </tr></thead>
+        <tbody>
+          ${designs.map(d => `
+            <tr>
+              <td><strong>${d.design_id || '-'}</strong></td>
+              <td>${d.style || '-'}</td>
+              <td>${(d.title || '-').substring(0, 45)}</td>
+              <td><span class="badge badge-${d.status === 'published' ? 'published' : 'draft'}">${d.status || 'draft'}</span></td>
+              <td><span class="badge badge-${(d.estimated_ctr || 'low').toLowerCase()}">${d.estimated_ctr || '-'}</span></td>
+              <td>${d.units_sold || 0}</td>
+              <td>$${(d.revenue || 0).toFixed(2)}</td>
+              <td style="color:var(--green)">$${(d.royalty || 0).toFixed(2)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderNiches() {
+  const niches = data.niche_performance || [];
+  const container = document.getElementById('tab-niches');
+
+  if (!niches.length) {
+    container.innerHTML = '<div class="section"><div class="empty">No niches yet. Run the pipeline to discover niches.</div></div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="section">
+      <h3>Niche Performance</h3>
+      <table>
+        <thead><tr>
+          <th>Niche</th><th>Verdict</th><th>Score</th><th>Designs</th>
+          <th>Listings</th><th>Units Sold</th><th>Total Royalty</th>
+        </tr></thead>
+        <tbody>
+          ${niches.map(n => `
+            <tr>
+              <td><strong>${n.niche || '-'}</strong></td>
+              <td><span class="badge badge-${(n.verdict || 'skip').toLowerCase()}">${n.verdict || '-'}</span></td>
+              <td>
+                ${n.score || 0}/100
+                <div class="progress-bar"><div class="progress-fill" style="width:${n.score || 0}%;background:var(--accent)"></div></div>
+              </td>
+              <td>${n.designs || 0}</td>
+              <td>${n.listings || 0}</td>
+              <td>${n.total_units || 0}</td>
+              <td style="color:var(--green)">$${(n.total_royalty || 0).toFixed(2)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderDrafts() {
+  const drafts = data.draft_listings || [];
+  const container = document.getElementById('tab-drafts');
+
+  if (!drafts.length) {
+    container.innerHTML = '<div class="section"><div class="empty">No drafts. Ready to publish? Run the listing writer step in the pipeline.</div></div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="section">
+      <h3>Draft Listings (Ready to Upload &mdash; ${drafts.length})</h3>
+      <table>
+        <thead><tr>
+          <th>#</th><th>Title</th><th>Price</th><th>Design ID</th><th>Created</th>
+        </tr></thead>
+        <tbody>
+          ${drafts.map(d => `
+            <tr>
+              <td>${d.id}</td>
+              <td>${(d.title || '-').substring(0, 60)}</td>
+              <td>$${(d.price || 0).toFixed(2)}</td>
+              <td>${d.design_id || '-'}</td>
+              <td>${d.published_at || 'Draft'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// Auto-load if dashboard_data.json exists
+fetch('dashboard_data.json')
+  .then(r => { if (r.ok) return r.json(); throw new Error('no file'); })
+  .then(json => {
+    data = json;
+    document.getElementById('lastUpdated').textContent =
+      'Updated: ' + new Date(data.generated_at).toLocaleString();
+    document.getElementById('tabBar').style.display = 'flex';
+    renderOverview();
+  })
+  .catch(() => {
+    document.getElementById('lastUpdated').textContent = 'Click "Load JSON" to load dashboard_data.json';
+  });
+</script>
+
+</body>
+</html>

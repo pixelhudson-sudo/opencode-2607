@@ -1,0 +1,294 @@
+{
+  "name": "Missed Call Text-Back — Client Bundle",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b1",
+      "name": "Incoming Call",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "d1", "name": "BUSINESS_NAME", "type": "string", "value": "CHANGE ME — e.g. Rivera Plumbing" },
+            { "id": "d2", "name": "OWNER_PHONE", "type": "string", "value": "+15550002222" },
+            { "id": "d3", "name": "TWILIO_FROM", "type": "string", "value": "+15550001111" },
+            { "id": "d4", "name": "TWILIO_ACCOUNT_SID", "type": "string", "value": "ACxxxxxxxxxxxxxxxx" },
+            { "id": "d5", "name": "N8N_BASE_URL", "type": "string", "value": "https://YOUR-N8N-PUBLIC-URL" },
+            { "id": "d6", "name": "MODEL", "type": "string", "value": "kimi-k3" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b2",
+      "name": "Set Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=<Response><Dial timeout=\"20\" action=\"{{ $json.N8N_BASE_URL }}/webhook/call-status\"><Number>{{ $json.OWNER_PHONE }}</Number></Dial><Say>Sorry we missed you. Check your phone — we just texted you.</Say></Response>",
+        "options": {
+          "responseHeaders": {
+            "entries": [ { "name": "Content-Type", "value": "text/xml" } ]
+          }
+        }
+      },
+      "id": "b3",
+      "name": "Respond TwiML",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [440, 200]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "call-status",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "b4",
+      "name": "Call Status",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 500]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.body.DialCallStatus }}",
+              "rightValue": "no-answer",
+              "operator": { "type": "string", "operation": "equals" }
+            },
+            {
+              "id": "cond-2",
+              "leftValue": "={{ $json.body.DialCallStatus }}",
+              "rightValue": "busy",
+              "operator": { "type": "string", "operation": "equals" }
+            },
+            {
+              "id": "cond-3",
+              "leftValue": "={{ $json.body.DialCallStatus }}",
+              "rightValue": "failed",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "b5",
+      "name": "Was Missed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [220, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.moonshot.ai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"model\": \"kimi-k3\", \"temperature\": 0.6, \"messages\": [ { \"role\": \"system\", \"content\": \"You write the instant text-back a local business sends after missing a call. Under 240 characters. Brief apology, warm, ask what they need help with. Sound like a real person at the shop, not a bot. Output ONLY the SMS text.\" }, { \"role\": \"user\", \"content\": \"Business: \" + \"RIVERA_PLACEHOLDER\" + \"\\nCaller number: \" + $json.body.From } ] }) }}",
+        "options": {}
+      },
+      "id": "b6",
+      "name": "Write Customer Text",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 500],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Moonshot API" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.item.json;\nconst text = r.choices?.[0]?.message?.content?.trim() || \"\";\nif (!text) throw new Error(\"Moonshot returned no text\");\nreturn { json: { sms: text.replace(/^\"|\"$/g, \"\") } };"
+      },
+      "id": "b7",
+      "name": "Extract Customer Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ \"ACxxxxxxxxxxxxxxxx\" }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To", "value": "={{ $node[\"Call Status\"].json.body.From }}" },
+            { "name": "From", "value": "+15550001111" },
+            { "name": "Body", "value": "={{ $node[\"Extract Customer Text\"].json.sms }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b8",
+      "name": "Text Caller",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 500],
+      "credentials": { "httpBasicAuth": { "id": "", "name": "Twilio API" } }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ \"ACxxxxxxxxxxxxxxxx\" }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To", "value": "+15550002222" },
+            { "name": "From", "value": "+15550001111" },
+            { "name": "Body", "value": "=Missed call from {{ $node[\"Call Status\"].json.body.From }} at {{ $now.toFormat('hh:mm a') }}. Auto-text sent: \"{{ $node[\"Extract Customer Text\"].json.sms }}\"" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b9",
+      "name": "Notify Owner",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 500],
+      "credentials": { "httpBasicAuth": { "id": "", "name": "Twilio API" } }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sms",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b10",
+      "name": "Inbound SMS",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 800]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "e1", "name": "BUSINESS_PROFILE", "type": "string", "value": "CHANGE ME — e.g. Rivera Plumbing. Open Mon-Sat 7am-7pm. Services: drain cleaning, water heaters, leak repair. Jobs typically $150-$600. Book at riveraplumbing.com or reply BOOK." },
+            { "id": "e2", "name": "OWNER_PHONE", "type": "string", "value": "+15550002222" },
+            { "id": "e3", "name": "TWILIO_FROM", "type": "string", "value": "+15550001111" },
+            { "id": "e4", "name": "TWILIO_ACCOUNT_SID", "type": "string", "value": "ACxxxxxxxxxxxxxxxx" },
+            { "id": "e5", "name": "MODEL", "type": "string", "value": "kimi-k3" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b11",
+      "name": "Set Config SMS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 800]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.moonshot.ai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"model\": $node[\"Set Config SMS\"].json.MODEL, \"temperature\": 0.5, \"messages\": [ { \"role\": \"system\", \"content\": \"You are the text receptionist for this business. Business profile: \" + $node[\"Set Config SMS\"].json.BUSINESS_PROFILE + \"\\nRules: answer the customer's question helpfully, under 300 characters, warm and human. Only state facts from the profile — never invent prices or hours. If they want to book, give the booking instructions from the profile. If it's an emergency or you can't answer, say a human will call them shortly. Output ONLY the reply SMS text.\" }, { \"role\": \"user\", \"content\": $node[\"Inbound SMS\"].json.body.Body } ] }) }}",
+        "options": {}
+      },
+      "id": "b12",
+      "name": "Answer Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 800],
+      "credentials": { "httpHeaderAuth": { "id": "", "name": "Moonshot API" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.item.json;\nconst text = r.choices?.[0]?.message?.content?.trim() || \"\";\nif (!text) throw new Error(\"Moonshot returned no text\");\nreturn { json: { reply: text.replace(/^\"|\"$/g, \"\") } };"
+      },
+      "id": "b13",
+      "name": "Extract Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 800]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=<Response><Message>{{ $json.reply }}</Message></Response>",
+        "options": {
+          "responseHeaders": {
+            "entries": [ { "name": "Content-Type", "value": "text/xml" } ]
+          }
+        }
+      },
+      "id": "b14",
+      "name": "Reply TwiML",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [880, 800]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $node[\"Set Config SMS\"].json.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To", "value": "={{ $node[\"Set Config SMS\"].json.OWNER_PHONE }}" },
+            { "name": "From", "value": "={{ $node[\"Set Config SMS\"].json.TWILIO_FROM }}" },
+            { "name": "Body", "value": "=Lead texted ({{ $node[\"Inbound SMS\"].json.body.From }}): \"{{ $node[\"Inbound SMS\"].json.body.Body }}\" — Bot replied: \"{{ $node[\"Extract Reply\"].json.reply }}\"" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b15",
+      "name": "Tell Owner",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 1000],
+      "credentials": { "httpBasicAuth": { "id": "", "name": "Twilio API" } }
+    }
+  ],
+  "connections": {
+    "Incoming Call": { "main": [[{ "node": "Set Config", "type": "main", "index": 0 }]] },
+    "Set Config": { "main": [[{ "node": "Respond TwiML", "type": "main", "index": 0 }]] },
+    "Call Status": { "main": [[{ "node": "Was Missed?", "type": "main", "index": 0 }]] },
+    "Was Missed?": { "main": [[{ "node": "Write Customer Text", "type": "main", "index": 0 }]] },
+    "Write Customer Text": { "main": [[{ "node": "Extract Customer Text", "type": "main", "index": 0 }]] },
+    "Extract Customer Text": { "main": [[{ "node": "Text Caller", "type": "main", "index": 0 }, { "node": "Notify Owner", "type": "main", "index": 0 }]] },
+    "Inbound SMS": { "main": [[{ "node": "Set Config SMS", "type": "main", "index": 0 }]] },
+    "Set Config SMS": { "main": [[{ "node": "Answer Customer", "type": "main", "index": 0 }]] },
+    "Answer Customer": { "main": [[{ "node": "Extract Reply", "type": "main", "index": 0 }]] },
+    "Extract Reply": { "main": [[{ "node": "Reply TwiML", "type": "main", "index": 0 }, { "node": "Tell Owner", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "pinData": {}
+}

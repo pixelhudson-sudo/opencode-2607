@@ -1,0 +1,13 @@
+{
+  "players": {
+    "Player 1": [
+      "first_game",
+      "first_win"
+    ]
+  },
+  "game_count": {
+    "Player 1": {
+      "reaction": 1
+    }
+  }
+}
